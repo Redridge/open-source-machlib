@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "MachHeader.hpp"
+#include "Segment32.hpp"
+#include "Segment64.hpp"
 
 
 void print_header(MachHeader header)
@@ -34,6 +36,13 @@ int main(int argc, char *argv[])
 
         MachHeader header(file);
         print_header(header);
+
+        Segment *seg;
+        if(header.getIs32())
+                seg = new Segment32(file);
+        else
+                seg = new Segment64(file);
+        printf("virtualSize=%llu", seg->getVirtualSize());
 
         return 0;
 }
