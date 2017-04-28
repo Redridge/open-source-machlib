@@ -15,6 +15,8 @@
 #define LC_SEGMENT32    0x01
 #define LC_SEGMENT64    0x19
 
+/*high level class*/
+/*entry point of the library*/
 class MachO
 {
 private:

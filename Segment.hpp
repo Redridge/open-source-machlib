@@ -5,9 +5,12 @@
 #include <vector>
 #include "Section.hpp"
 
+/*generic class for SegmentLoad Command which the user will use*/
+/*this class is needed to abstract the architecture 32 bit 64 bit*/
 class Segment
 {
 
+/*common fields*/
 protected:
         char name[16];
         uint32_t maxProtection;
@@ -16,6 +19,7 @@ protected:
         uint32_t flags;
         std::vector<Section *> sections;
 
+/*unified interface for both 32 bit and 64 bit*/
 public:
         char *getName();
         virtual uint64_t getVirtualAddress() = 0;

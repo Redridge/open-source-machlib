@@ -4,9 +4,10 @@
 #include "Segment.hpp"
 #include <stdint.h>
 
-
+/*class for the load segment command for 64 bit architecture*/
 class Segment64: public Segment
 {
+/*specific fields*/
 private:
         uint64_t virtualAddress;
         uint64_t virtualSize;

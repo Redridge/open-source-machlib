@@ -7,9 +7,10 @@ MachO::MachO(char *fileName)
         FILE *file;
 
         file = fopen(fileName, "rb");
-
+        /*parse header*/
         header = MachHeader(file);
 
+        /*parse load commands*/
         for (index = 0; index < header.getNumberCmds(); index++) {
                 FileUtils::readUint32(file, &command);
 
@@ -23,6 +24,7 @@ MachO::MachO(char *fileName)
                                 segments.push_back(new Segment64(file));
                                 break;
 
+                        /*parsing not yet implemented - -skip*/
                         default:
                                 uint32_t size;
                                 FileUtils::readUint32(file, &size);

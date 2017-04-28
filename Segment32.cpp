@@ -26,6 +26,7 @@ Segment32::Segment32(FILE *file)
 
         FileUtils::readUint32(file, &flags);
 
+        /*parse sections*/
         for(index = 0; index < numberSections; index++) {
                 sections.push_back(new Section32(file));
         }
@@ -40,7 +41,6 @@ uint64_t Segment32::getVirtualAddress()
 
 uint64_t Segment32::getVirtualSize()
 {
-        printf("32 size\n");
         return virtualSize;
 }
 

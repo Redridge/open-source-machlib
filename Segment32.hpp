@@ -4,7 +4,7 @@
 #include "Segment.hpp"
 #include <stdint.h>
 
-
+/*class for the load segment command for 32 bit architecture*/
 class Segment32: public Segment
 {
 private:

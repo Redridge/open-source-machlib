@@ -26,6 +26,7 @@ Segment64::Segment64(FILE *file)
 
         FileUtils::readUint32(file, &flags);
 
+        /*parse sections*/
         for(index = 0; index < numberSections; index++) {
                 sections.push_back(new Section64(file));
         }

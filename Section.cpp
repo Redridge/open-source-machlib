@@ -27,6 +27,10 @@ uint32_t Section::getRelocationOffset()
         return relocationsOffset;
 }
 
+uint32_t Section::getNumberRelocations()
+{
+        return numberRelocations;
+}
 uint32_t Section::getFlags()
 {
         return flags;
