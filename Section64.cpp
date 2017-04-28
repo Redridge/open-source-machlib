@@ -24,6 +24,8 @@ Section64::Section64(FILE *file)
         FileUtils::readUint32(file, &reserved1);
 
         FileUtils::readUint32(file, &reserved2);
+
+        FileUtils::readUint32(file, &reserved3);
 }
 
 uint64_t Section64::getVirtualAddress()

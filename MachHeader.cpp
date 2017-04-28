@@ -27,6 +27,11 @@ MachHeader::MachHeader(FILE *file)
 
 }
 
+MachHeader::MachHeader()
+{
+        
+}
+
 bool MachHeader::getIs32()
 {
         return is_32;

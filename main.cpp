@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
-#include "MachHeader.hpp"
-#include "Segment32.hpp"
-#include "Segment64.hpp"
+#include <vector>
+#include "MachO.hpp"
 
 
 void print_header(MachHeader header)
@@ -18,6 +17,46 @@ void print_header(MachHeader header)
         if (header.getMagic() == MAGIC_64)
                 printf("reserved:%x\n", header.getReserved());
 }
+void print_section(Section *section)
+{
+        printf("Segment name: %s\nSection name %s\n",
+        section->getSectionName(), section->getSegmentName());
+
+        printf("virtual address: %lld\nsize: %lld\n",
+        section->getVirtualAddress(), section->getSize());
+
+        printf("offset: %d\nalign: %d\n",
+        section->getOffset(), section->getAlign());
+
+        printf("relocation offset: %d\nflags: %u        \n",
+        section->getRelocationOffset(), section->getFlags());
+
+        printf("reserved1: %d\nreserved2: %d\n",
+        section->getReserved1(), section->getReserved2());
+}
+
+void print_segment(Segment *segment)
+{
+        printf("Segment Name: %s\n", segment->getName());
+
+        printf("virtual address: %lld\n virtual size: %lld\n",
+                segment->getVirtualAddress(), segment->getVirtualSize());
+
+        printf("file offset: %lld\n file size: %lld\n",
+                segment->getFileOffset(), segment->getFileSize() );
+
+        printf("init prot: %x\n max prot: %x\n",
+                segment->getInitProtection(), segment->getMaxProtection());
+
+        printf("flags: %x\n number of sections: %d\n",
+                segment->getFlags(), segment->getNumberSections());
+
+        std::vector<Section *> sections = segment->getSections();
+        for(int i = 0; i < segment->getNumberSections(); i++)
+                print_section(sections[i]);
+}
+
+
 
 int main(int argc, char *argv[])
 {
@@ -27,30 +66,14 @@ int main(int argc, char *argv[])
                 printf("Usage: %s <binary>\n", argv[0]);
                 return -1;
         }
-
-        file = fopen(argv[1], "rb");
-        if(!file) {
-                printf("file not opened");
-                return 0;
-        }
-
-        MachHeader header(file);
+        MachO bin(argv[1]);
+        MachHeader header = bin.getHeader();
         print_header(header);
 
-        Segment *seg;
-        uint32_t command;
-        fread(&command, sizeof(uint32_t), 1, file);
-        if(header.getIs32())
-                seg = new Segment32(file);
-        else
-                seg = new Segment64(file);
-        printf("name=%s\n", seg->getName());
+        std::vector<Segment *> segments = bin.getSegments();
 
-        printf("vmsize=%llu\n", seg->getVirtualSize());
-        printf("filesize=%llu\n", seg->getFileSize());
-        printf("fileoff=%llu\n", seg->getFileOffset());
-
-
-
+        for(int i = 0; i < segments.size(); i++) {
+                print_segment(segments[i]);
+        }s
         return 0;
 }
