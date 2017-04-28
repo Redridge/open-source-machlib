@@ -38,11 +38,19 @@ int main(int argc, char *argv[])
         print_header(header);
 
         Segment *seg;
+        uint32_t command;
+        fread(&command, sizeof(uint32_t), 1, file);
         if(header.getIs32())
                 seg = new Segment32(file);
         else
                 seg = new Segment64(file);
-        printf("virtualSize=%llu", seg->getVirtualSize());
+        printf("name=%s\n", seg->getName());
+
+        printf("vmsize=%llu\n", seg->getVirtualSize());
+        printf("filesize=%llu\n", seg->getFileSize());
+        printf("fileoff=%llu\n", seg->getFileOffset());
+
+
 
         return 0;
 }

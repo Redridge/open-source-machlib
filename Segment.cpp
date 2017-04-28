@@ -1,5 +1,9 @@
 #include "Segment.hpp"
 
+char * Segment::getName()
+{
+        return name;
+}
 uint32_t Segment::getMaxProtection()
 {
         return maxProtection;

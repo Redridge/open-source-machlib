@@ -35,7 +35,6 @@ uint64_t Segment64::getVirtualAddress()
 
 uint64_t Segment64::getVirtualSize()
 {
-        printf("64 size\n");
         return virtualSize;
 }
 
