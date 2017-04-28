@@ -7,9 +7,9 @@ Section64::Section64(FILE *file)
 
         FileUtils::readBytes(file, segmentName, 16);
 
-        FileUtils::readUint32(file, &virtualAddress);
+        FileUtils::readUint64(file, &virtualAddress);
 
-        FileUtils::readUint32(file, &size);
+        FileUtils::readUint64(file, &size);
 
         FileUtils::readUint32(file, &offset);
 

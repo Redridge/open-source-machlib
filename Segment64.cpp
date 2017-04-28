@@ -1,9 +1,10 @@
 #include "FileUtils.hpp"
 #include "Segment64.hpp"
+#include "Section64.hpp"
 
 Segment64::Segment64(FILE *file)
 {
-        uint32_t cmdSize, dummy;
+        uint32_t cmdSize, index;
 
         FileUtils::readUint32(file, &cmdSize);
 
@@ -25,6 +26,9 @@ Segment64::Segment64(FILE *file)
 
         FileUtils::readUint32(file, &flags);
 
+        for(index = 0; index < numberSections; index++) {
+                sections.push_back(new Section64(file));
+        }
 
 }
 

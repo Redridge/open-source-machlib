@@ -23,3 +23,8 @@ uint32_t Segment::getFlags()
 {
         return flags;
 }
+
+std::vector<Section *> Segment::getSections()
+{
+        return sections;
+}

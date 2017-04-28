@@ -2,6 +2,8 @@
 #define __SEGEMENT_HPP
 
 #include <stdint.h>
+#include <vector>
+#include "Section.hpp"
 
 class Segment
 {
@@ -12,6 +14,7 @@ protected:
         uint32_t initProtection;
         uint32_t numberSections;
         uint32_t flags;
+        std::vector<Section *> sections;
 
 public:
         char *getName();
@@ -23,6 +26,7 @@ public:
         uint32_t getInitProtection();
         uint32_t getNumberSections();
         uint32_t getFlags();
+        std::vector<Section *> getSections();
 };
 
 #endif

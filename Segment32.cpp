@@ -1,9 +1,10 @@
 #include "FileUtils.hpp"
 #include "Segment32.hpp"
+#include "Section32.hpp"
 
 Segment32::Segment32(FILE *file)
 {
-        uint32_t cmdSize, dummy;
+        uint32_t cmdSize, index;
 
         FileUtils::readUint32(file, &cmdSize);
 
@@ -24,6 +25,10 @@ Segment32::Segment32(FILE *file)
         FileUtils::readUint32(file, &numberSections);
 
         FileUtils::readUint32(file, &flags);
+
+        for(index = 0; index < numberSections; index++) {
+                sections.push_back(new Section32(file));
+        }
 
 
 }
