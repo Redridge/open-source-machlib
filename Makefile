@@ -1,7 +1,7 @@
 build: header_cpp
 
-header_cpp: MachHeader.o FileUtils.o  Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o main.o
-		g++  MachHeader.o FileUtils.o Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o main.o -o header_cpp
+header_cpp: MachHeader.o FileUtils.o  Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o main.o
+		g++  MachHeader.o FileUtils.o Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o main.o -o header_cpp
 MachHeader.o:	MachHeader.cpp
 		g++ -c MachHeader.cpp
 
@@ -26,6 +26,9 @@ Section32.o : Section32.cpp
 Section64.o : Section64.cpp
 	g++ -c Section64.cpp
 
+SymbolTableHeader.o : SymbolTableHeader.cpp
+	g++ -c SymbolTableHeader.cpp
+
 MachO.o : MachO.cpp
 	g++ -c MachO.cpp
 
@@ -33,4 +36,4 @@ main.o: main.cpp
 	g++ -c main.cpp
 
 clean:
-	rm MachHeader.o FileUtils.o main.o Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o  header_cpp
+	rm MachHeader.o FileUtils.o main.o Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o  header_cpp

@@ -24,6 +24,10 @@ MachO::MachO(char *fileName)
                                 segments.push_back(new Segment64(file));
                                 break;
 
+                        case LC_SYMTAB:
+                                symbolTableHeader = SymbolTableHeader(file);
+                                break;
+
                         /*parsing not yet implemented - -skip*/
                         default:
                                 uint32_t size;
@@ -42,6 +46,11 @@ MachHeader MachO::getHeader()
 std::vector<Segment *>MachO::getSegments()
 {
         return segments;
+}
+
+SymbolTableHeader MachO::getSymbolTableHeader()
+{
+        return symbolTableHeader;
 }
 
 MachO::~MachO()

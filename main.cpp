@@ -56,6 +56,15 @@ void print_segment(Segment *segment)
                 print_section(sections[i]);
 }
 
+void print_symbol_header(SymbolTableHeader header)
+{
+        printf("tableOffset: %u\nnumber symbols: %u\n",
+        header.getTableOffset(), header.getNumberofSymbols());
+
+        printf("string table offset: %u\nstring table size: %u\n",
+        header.getStringTableOffset(), header.getStringTableSize());
+}
+
 
 /*listing of segments and sections*/
 int main(int argc, char *argv[])
@@ -68,12 +77,15 @@ int main(int argc, char *argv[])
         }
         MachO bin(argv[1]);
         MachHeader header = bin.getHeader();
-        print_header(header);
+        //print_header(header);
 
         std::vector<Segment *> segments = bin.getSegments();
 
         for(int i = 0; i < segments.size(); i++) {
-                print_segment(segments[i]);
+//                print_segment(segments[i]);
         }
+
+        SymbolTableHeader symbolTableHeader = bin.getSymbolTableHeader();
+        print_symbol_header(symbolTableHeader);
         return 0;
 }
