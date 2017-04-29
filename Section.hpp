@@ -33,6 +33,8 @@ public:
         uint32_t getReserved1();
         uint32_t getReserved2();
         virtual uint32_t getReserved3() = 0;
+
+        virtual ~Section();
 };
 
 #endif

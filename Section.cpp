@@ -45,3 +45,7 @@ uint32_t Section::getReserved2()
 {
         return reserved2;
 }
+
+Section::~Section()
+{
+}

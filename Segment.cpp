@@ -28,3 +28,9 @@ std::vector<Section *> Segment::getSections()
 {
         return sections;
 }
+Segment::~Segment()
+{
+        int index;
+        for(index = 0; index < sections.size(); index++)
+                delete sections[index];
+}

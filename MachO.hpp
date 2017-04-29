@@ -27,6 +27,8 @@ public:
         MachO(char  *fileName);
         MachHeader getHeader();
         std::vector<Segment *> getSegments();
+
+        ~MachO();
 };
 
 

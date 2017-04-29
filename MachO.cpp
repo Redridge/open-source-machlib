@@ -43,3 +43,12 @@ std::vector<Segment *>MachO::getSegments()
 {
         return segments;
 }
+
+MachO::~MachO()
+{
+        int index;
+
+        for(index = 0; index < segments.size(); index++){
+                delete segments[index];
+        }
+}

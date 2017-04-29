@@ -31,6 +31,8 @@ public:
         uint32_t getNumberSections();
         uint32_t getFlags();
         std::vector<Section *> getSections();
+
+        virtual ~Segment();
 };
 
 #endif

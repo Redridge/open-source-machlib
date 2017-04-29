@@ -7,6 +7,7 @@
 /*class for the load segment command for 32 bit architecture*/
 class Segment32: public Segment
 {
+/*specific fields*/
 private:
         uint32_t virtualAddress;
         uint32_t virtualSize;
@@ -19,6 +20,7 @@ public:
         virtual uint64_t getVirtualSize();
         virtual uint64_t getFileOffset();
         virtual uint64_t getFileSize();
-};
 
+
+};
 #endif
