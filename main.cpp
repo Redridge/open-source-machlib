@@ -77,12 +77,12 @@ int main(int argc, char *argv[])
         }
         MachO bin(argv[1]);
         MachHeader header = bin.getHeader();
-        //print_header(header);
+        print_header(header);
 
         std::vector<Segment *> segments = bin.getSegments();
 
         for(int i = 0; i < segments.size(); i++) {
-//                print_segment(segments[i]);
+               print_segment(segments[i]);
         }
 
         SymbolTableHeader symbolTableHeader = bin.getSymbolTableHeader();
