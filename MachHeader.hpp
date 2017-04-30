@@ -22,7 +22,7 @@ private:
 
 public:
         MachHeader(FILE *file);
-
+        MachHeader();
         /****getter****/
         bool getIs32();
         uint32_t getMagic();
