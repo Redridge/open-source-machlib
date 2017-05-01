@@ -1,6 +1,6 @@
 #include "SymbolTableEntry.hpp"
 
-SymbolTableEntry::SymbolTableEntry(FILE *file)
+SymbolTableEntry::SymbolTableEntry(FILE *file, char *strings)
 {
                 FileUtils::readUint32(file, &stringTableIndex);
 
@@ -9,6 +9,10 @@ SymbolTableEntry::SymbolTableEntry(FILE *file)
                 FileUtils::readUint8(file, &sectionIndex);
 
                 FileUtils::readUint16(file, &description);
+
+                name = new char[strlen(&strings[stringTableIndex]) + 1];
+
+                strcpy(name, &strings[stringTableIndex]);
 
 }
 
@@ -35,4 +39,15 @@ uint8_t SymbolTableEntry::getSectionIndex()
 uint16_t SymbolTableEntry::getDescription()
 {
         return description;
+}
+
+char *SymbolTableEntry::getName()
+{
+        return name;
+}
+
+SymbolTableEntry::~SymbolTableEntry()
+{
+        printf("entry dessctructor");
+        delete name;
 }

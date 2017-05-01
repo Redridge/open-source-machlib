@@ -1,7 +1,7 @@
 #include "SymbolTableEntry32.hpp"
 
 
-SymbolTableEntry32::SymbolTableEntry32(FILE *file) : SymbolTableEntry(file)
+SymbolTableEntry32::SymbolTableEntry32(FILE *file, char *strings) : SymbolTableEntry(file, strings)
 {
         FileUtils::readUint32(file, &value);
 }

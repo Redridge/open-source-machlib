@@ -65,7 +65,20 @@ void print_symbol_header(SymbolTableHeader header)
         header.getStringTableOffset(), header.getStringTableSize());
 }
 
+void print_symbol(SymbolTableEntry *entry)
+{
+        printf("string table index: %u\n", entry->getStringTableIndex());
 
+        printf("symbol name: %s\n", entry->getName());
+
+        printf("type: 0x%x\n", entry->getType());
+
+        printf("section index: %u\n", entry->getSectionIndex());
+
+        printf("description: %u\n", entry->getDescription());
+
+        printf("value: %llu\n", entry->getValue());
+}
 /*listing of segments and sections*/
 int main(int argc, char *argv[])
 {
@@ -77,15 +90,26 @@ int main(int argc, char *argv[])
         }
         MachO bin(argv[1]);
         MachHeader header = bin.getHeader();
-        print_header(header);
+        //print_header(header);
 
         std::vector<Segment *> segments = bin.getSegments();
 
         for(int i = 0; i < segments.size(); i++) {
-               print_segment(segments[i]);
+               //print_segment(segments[i]);
         }
 
         SymbolTableHeader symbolTableHeader = bin.getSymbolTableHeader();
-        print_symbol_header(symbolTableHeader);
+        //print_symbol_header(symbolTableHeader);
+
+        StringTable *stringTable = bin.getStringTable();
+        for(int i = 0; i < stringTable->getNumberOfStrings(); i++) {
+                printf("%d---%s\n", i,  stringTable->get(i) );
+        }
+
+        std::vector<SymbolTableEntry *> symbolTable = bin.getSymbolTable();
+
+        for(int i = 0; i < symbolTable.size(); i++) {
+                print_symbol(symbolTable[i]);
+        }
         return 0;
 }

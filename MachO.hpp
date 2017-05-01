@@ -12,6 +12,10 @@
 #include "Section64.hpp"
 #include "Segment64.hpp"
 #include "SymbolTableHeader.hpp"
+#include "StringTable.hpp"
+#include "SymbolTableEntry.hpp"
+#include "SymbolTableEntry32.hpp"
+#include "SymbolTableEntry64.hpp"
 
 #define LC_SEGMENT32    0x01
 #define LC_SEGMENT64    0x19
@@ -22,15 +26,22 @@
 class MachO
 {
 private:
+        FILE *file;
         MachHeader header;
         std::vector<Segment *> segments;
         SymbolTableHeader symbolTableHeader;
+        bool stringTableComputed;
+        bool symbolTableComputed;
+        StringTable *stringTable;
+        std::vector<SymbolTableEntry *> symbolTable;
 
 public:
         MachO(char  *fileName);
         MachHeader getHeader();
         std::vector<Segment *> getSegments();
         SymbolTableHeader getSymbolTableHeader();
+        StringTable *getStringTable();
+        std::vector<SymbolTableEntry *> getSymbolTable();
 
         ~MachO();
 };

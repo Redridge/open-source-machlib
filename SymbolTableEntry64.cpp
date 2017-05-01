@@ -1,7 +1,7 @@
 #include "SymbolTableEntry64.hpp"
 
 
-SymbolTableEntry64::SymbolTableEntry64(FILE *file) : SymbolTableEntry(file)
+SymbolTableEntry64::SymbolTableEntry64(FILE *file, char *strings) : SymbolTableEntry(file, strings)
 {
         FileUtils::readUint64(file, &value);
 }

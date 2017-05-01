@@ -4,8 +4,6 @@ MachO::MachO(char *fileName)
 {
         uint32_t command, index;
 
-        FILE *file;
-
         file = fopen(fileName, "rb");
         /*parse header*/
         header = MachHeader(file);
@@ -37,6 +35,9 @@ MachO::MachO(char *fileName)
                         }
         }
 
+        stringTableComputed = false;
+        symbolTableComputed = false;
+
 }
 
 MachHeader MachO::getHeader()
@@ -53,6 +54,41 @@ SymbolTableHeader MachO::getSymbolTableHeader()
         return symbolTableHeader;
 }
 
+StringTable *MachO::getStringTable()
+{
+        if(!stringTableComputed) {
+                stringTable =  new StringTable(file, symbolTableHeader);
+                stringTableComputed = true;
+        }
+
+        return stringTable;
+}
+
+std::vector<SymbolTableEntry *> MachO::getSymbolTable()
+{
+        int index;
+        StringTable *stringTable;
+        char *strings;
+
+        if(!symbolTableComputed) {
+
+                fseek(file, symbolTableHeader.getTableOffset(), SEEK_SET);
+
+                stringTable = getStringTable();
+                strings = stringTable->getRaw();
+
+                for(index = 0; index < symbolTableHeader.getNumberofSymbols(); index++) {
+                        if(header.getIs32())
+                                symbolTable.push_back(new SymbolTableEntry32(file, strings));
+                        else
+                                symbolTable.push_back(new SymbolTableEntry64(file, strings));
+                }
+
+                symbolTableComputed = true;
+        }
+
+        return symbolTable;
+}
 MachO::~MachO()
 {
         int index;
@@ -60,4 +96,14 @@ MachO::~MachO()
         for(index = 0; index < segments.size(); index++){
                 delete segments[index];
         }
+
+        if(stringTableComputed)
+                delete stringTable;
+
+        if(symbolTableComputed) {
+                for(index = 0; index < symbolTable.size(); index++)
+                        delete symbolTable[index];
+        }
+
+        fclose(file);
 }

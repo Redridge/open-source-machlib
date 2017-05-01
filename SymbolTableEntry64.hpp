@@ -9,7 +9,7 @@ private:
         uint64_t value;
 
 public:
-        SymbolTableEntry64(FILE *file);
+        SymbolTableEntry64(FILE *file, char *strings);
         virtual uint64_t getValue();
 };
 
