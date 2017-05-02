@@ -71,14 +71,20 @@ void print_symbol(SymbolTableEntry *entry)
 
         printf("symbol name: %s\n", entry->getName());
 
-        printf("type: 0x%x\n", entry->getType());
+        printf("type: 0x%x Debug:%d PrivateExternal:%d External:%d\nUndefined:%d Absolute: %d DefinSection: %d Prebound:%d Indirect %d\n",
+        entry->getType(), entry->isDebug(), entry->isPrivateExternal(), entry->isExternal(),
+        entry->isUndefined(), entry->isAbsolute(), entry->isDefinedInSection(),
+        entry->isPrebound(), entry->isIndirect());
 
         printf("section index: %u\n", entry->getSectionIndex());
 
         printf("description: %u\n", entry->getDescription());
+        if(entry->isUndefined())
+        printf("library ordinal: %d\n", entry->getLibraryOrdinal());
 
         printf("value: %llu\n", entry->getValue());
 }
+
 /*listing of segments and sections*/
 int main(int argc, char *argv[])
 {

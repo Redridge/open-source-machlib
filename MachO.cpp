@@ -89,6 +89,7 @@ std::vector<SymbolTableEntry *> MachO::getSymbolTable()
 
         return symbolTable;
 }
+
 MachO::~MachO()
 {
         int index;
