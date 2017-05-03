@@ -16,10 +16,12 @@
 #include "SymbolTableEntry.hpp"
 #include "SymbolTableEntry32.hpp"
 #include "SymbolTableEntry64.hpp"
+#include "LoadDyLinkerCmd.hpp"
 
-#define LC_SEGMENT32    0x01
-#define LC_SEGMENT64    0x19
-#define LC_SYMTAB       0x02
+#define LC_SEGMENT32            0x01
+#define LC_SEGMENT64            0x19
+#define LC_SYMTAB               0x02
+#define LC_LOAD_DYLINKER        0x0E
 
 /*high level class*/
 /*entry point of the library*/
@@ -37,6 +39,8 @@ private:
         StringTable *stringTable;
         /*entries in the symbol table*/
         std::vector<SymbolTableEntry *> symbolTable;
+        /*dinmaic linker load command*/
+        LoadDyLinkerCmd *loadDyLinkerCmd;
 
 public:
         MachO(char  *fileName);
@@ -45,6 +49,8 @@ public:
         SymbolTableHeader getSymbolTableHeader();
         StringTable *getStringTable();
         std::vector<SymbolTableEntry *> getSymbolTable();
+        LoadDyLinkerCmd *getLoadDyLinkerCmd();
+
 
         ~MachO();
 };

@@ -26,6 +26,10 @@ MachO::MachO(char *fileName)
                                 symbolTableHeader = SymbolTableHeader(file);
                                 break;
 
+                        case LC_LOAD_DYLINKER:
+                                loadDyLinkerCmd = new LoadDyLinkerCmd(file);
+                                break;
+
                         /*parsing not yet implemented - -skip*/
                         default:
                                 uint32_t size;
@@ -90,6 +94,11 @@ std::vector<SymbolTableEntry *> MachO::getSymbolTable()
         return symbolTable;
 }
 
+LoadDyLinkerCmd *MachO::getLoadDyLinkerCmd()
+{
+        return loadDyLinkerCmd;
+}
+
 MachO::~MachO()
 {
         int index;
@@ -105,6 +114,8 @@ MachO::~MachO()
                 for(index = 0; index < symbolTable.size(); index++)
                         delete symbolTable[index];
         }
+
+        delete loadDyLinkerCmd;
 
         fclose(file);
 }

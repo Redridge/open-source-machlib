@@ -109,13 +109,16 @@ int main(int argc, char *argv[])
 
         StringTable *stringTable = bin.getStringTable();
         for(int i = 0; i < stringTable->getNumberOfStrings(); i++) {
-                printf("%d---%s\n", i,  stringTable->get(i) );
+                //printf("%d---%s\n", i,  stringTable->get(i) );
         }
 
         std::vector<SymbolTableEntry *> symbolTable = bin.getSymbolTable();
 
         for(int i = 0; i < symbolTable.size(); i++) {
-                print_symbol(symbolTable[i]);
+                //print_symbol(symbolTable[i]);
         }
+
+        LoadDyLinkerCmd *cmd = bin.getLoadDyLinkerCmd();
+        printf(" the linker name is %s\n", cmd->getLinkerName() );
         return 0;
 }
