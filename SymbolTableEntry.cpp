@@ -10,6 +10,7 @@ SymbolTableEntry::SymbolTableEntry(FILE *file, char *strings)
 
                 FileUtils::readUint16(file, &description);
 
+                /*get the name from string table*/
                 name = new char[strlen(&strings[stringTableIndex]) + 1];
 
                 strcpy(name, &strings[stringTableIndex]);
@@ -162,4 +163,24 @@ uint8_t SymbolTableEntry::getLibraryOrdinal()
         else
                 return 0;
         //TODO throw exception
+}
+
+bool SymbolTableEntry::isWeakReferenced()
+{
+        return (description & WEAK_REF_MASK);
+}
+
+bool SymbolTableEntry::isWeakDefined()
+{
+        return (description & WEAK_DEF_MASK);
+}
+
+bool SymbolTableEntry::isRefToWeakSymbol()
+{
+        return (description & REF_TO_WEAK_MASK);
+}
+
+bool SymbolTableEntry::isSymbolResolver()
+{
+        return (description & SYMBOL_RESOLVER_MASK);
 }

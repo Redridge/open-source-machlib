@@ -30,9 +30,12 @@ private:
         MachHeader header;
         std::vector<Segment *> segments;
         SymbolTableHeader symbolTableHeader;
+        /*flags to avoid recomputing*/
         bool stringTableComputed;
         bool symbolTableComputed;
+        /*the string table*/
         StringTable *stringTable;
+        /*entries in the symbol table*/
         std::vector<SymbolTableEntry *> symbolTable;
 
 public:

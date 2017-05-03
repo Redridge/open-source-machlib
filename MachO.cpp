@@ -72,11 +72,11 @@ std::vector<SymbolTableEntry *> MachO::getSymbolTable()
 
         if(!symbolTableComputed) {
 
-                fseek(file, symbolTableHeader.getTableOffset(), SEEK_SET);
-
                 stringTable = getStringTable();
-                strings = stringTable->getRaw();
 
+                fseek(file, symbolTableHeader.getTableOffset(), SEEK_SET);
+                strings = stringTable->getRaw();
+                /*get the symbols*/
                 for(index = 0; index < symbolTableHeader.getNumberofSymbols(); index++) {
                         if(header.getIs32())
                                 symbolTable.push_back(new SymbolTableEntry32(file, strings));

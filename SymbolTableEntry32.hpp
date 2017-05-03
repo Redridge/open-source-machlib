@@ -3,6 +3,7 @@
 
 #include "SymbolTableEntry.hpp"
 
+/*specfic entry for 32 bit*/
 class SymbolTableEntry32: public SymbolTableEntry
 {
 private:

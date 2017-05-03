@@ -37,8 +37,38 @@
  * referenced by a dynamicly bound object (dynamic shared libraries, bundles).
  * With this marking strip knows not to strip these symbols.
  */
-#define REFERENCED_DYNAMICALLY	0x0010
+#define REFERENCED_DYNAMICALLY                          0x0010
 
+/*
+ * The N_WEAK_REF bit of the n_desc field indicates to the dynamic linker that
+ * the undefined symbol is allowed to be missing and is to have the address of
+ * zero when missing.
+ */
+#define WEAK_REF_MASK                                   0x0040 /* symbol is weak referenced */
+
+/*
+ * The N_WEAK_DEF bit of the n_desc field indicates to the static and dynamic
+ * linkers that the symbol definition is weak, allowing a non-weak symbol to
+ * also be used which causes the weak definition to be discared.  Currently this
+ * is only supported for symbols in coalesed sections.
+ */
+#define WEAK_DEF_MASK                                    0x0080 /* coalesed symbol is a weak definition */
+
+/*
+ * The N_REF_TO_WEAK bit of the n_desc field indicates to the dynamic linker
+ * that the undefined symbol should be resolved using flat namespace searching.
+ */
+#define	REF_TO_WEAK_MASK                                 0x0080 /* reference to a weak symbol */
+
+/*
+ * The N_SYMBOL_RESOLVER bit of the n_desc field indicates that the
+ * that the function is actually a resolver function and should
+ * be called to get the address of the real function to use.
+ * This bit is only available in .o files (MH_OBJECT filetype)
+ */
+#define SYMBOL_RESOLVER_MASK  0x0100
+
+/*class for an entry in the symbol table independent of 32bit or 64bit architecture*/
 class SymbolTableEntry
 {
 protected:
@@ -58,6 +88,7 @@ public:
         char *getName();
         virtual uint64_t getValue() = 0;
 
+        /*queries of the type field*/
         bool isDebug();
         bool isPrivateExternal();
         bool isExternal();
@@ -67,6 +98,7 @@ public:
         bool isPrebound();
         bool isIndirect();
 
+        /*queries of the description field*/
         bool isReferenceUndefinedNonLazy();
         bool isReferenceUndefinedLazy();
         bool isReferenceDefined();
@@ -76,6 +108,10 @@ public:
         bool isReferenceDynamically();
 
         uint8_t getLibraryOrdinal();
+        bool isWeakReferenced();
+        bool isWeakDefined();
+        bool isRefToWeakSymbol();
+        bool isSymbolResolver();
 
         virtual ~SymbolTableEntry();
 

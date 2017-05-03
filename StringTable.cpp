@@ -11,10 +11,10 @@ StringTable::StringTable(FILE *file, SymbolTableHeader tableHeader)
 
         FileUtils::readBytes(file, raw, tableSize);
 
+        /*index the table*/
         index = 0;
         dataIndex = 0;
         while(dataIndex < tableSize) {
-                //printf("index=%d char=%c;\n", dataIndex, raw[dataIndex]);
                 table.push_back(&raw[dataIndex]);
                 dataIndex += strlen(&raw[dataIndex]) + 1;
         }
@@ -48,6 +48,5 @@ uint32_t StringTable::getNumberOfStrings()
 
 StringTable::~StringTable()
 {
-        printf("dessctructor string table\n");
         delete raw;
 }

@@ -9,6 +9,7 @@
 #include "SymbolTableHeader.hpp"
 #include "FileUtils.hpp"
 
+/*string table referenced by the symbol table*/
 class StringTable
 {
 private:

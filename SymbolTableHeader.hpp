@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "FileUtils.hpp"
 
+/*information about the symbol and string tables*/
 class SymbolTableHeader
 {
 private:

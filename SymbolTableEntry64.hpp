@@ -3,6 +3,7 @@
 
 #include "SymbolTableEntry.hpp"
 
+/*specific entry for 64 bit*/
 class SymbolTableEntry64: public SymbolTableEntry
 {
 private:
