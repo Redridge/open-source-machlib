@@ -2,7 +2,7 @@
 
 MachO::MachO(char *fileName)
 {
-        uint32_t command, index;
+        uint32_t command, index, size;
 
         file = fopen(fileName, "rb");
         /*parse header*/
@@ -30,9 +30,13 @@ MachO::MachO(char *fileName)
                                 loadDyLinkerCmd = new LoadDyLinkerCmd(file);
                                 break;
 
+                        case LC_UUID:
+                                FileUtils::readUint32(file, &size);
+                                FileUtils::readBytes(file, (char *)uuid, UUID_SIZE);
+                                break;
+
                         /*parsing not yet implemented - -skip*/
                         default:
-                                uint32_t size;
                                 FileUtils::readUint32(file, &size);
                                 fseek(file, size - 8, SEEK_CUR);
                                 break;
@@ -97,6 +101,11 @@ std::vector<SymbolTableEntry *> MachO::getSymbolTable()
 LoadDyLinkerCmd *MachO::getLoadDyLinkerCmd()
 {
         return loadDyLinkerCmd;
+}
+
+uint8_t *MachO::getUUID()
+{
+        return uuid;
 }
 
 MachO::~MachO()

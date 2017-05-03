@@ -23,6 +23,9 @@
 #define LC_SYMTAB               0x02
 #define LC_LOAD_DYLINKER        0x0E
 
+#define LC_UUID                 0x1B
+#define UUID_SIZE               16
+
 /*high level class*/
 /*entry point of the library*/
 class MachO
@@ -42,6 +45,10 @@ private:
         /*dinmaic linker load command*/
         LoadDyLinkerCmd *loadDyLinkerCmd;
 
+        /*the uuid is a128-bit unique random number that*/
+        /*identifies an object produced by the static link editor*/
+        uint8_t uuid[UUID_SIZE];
+
 public:
         MachO(char  *fileName);
         MachHeader getHeader();
@@ -50,6 +57,7 @@ public:
         StringTable *getStringTable();
         std::vector<SymbolTableEntry *> getSymbolTable();
         LoadDyLinkerCmd *getLoadDyLinkerCmd();
+        uint8_t *getUUID();
 
 
         ~MachO();

@@ -120,5 +120,13 @@ int main(int argc, char *argv[])
 
         LoadDyLinkerCmd *cmd = bin.getLoadDyLinkerCmd();
         printf(" the linker name is %s\n", cmd->getLinkerName() );
+
+        uint8_t *uuid = bin.getUUID();
+        printf("the uuid is:\n");
+        for(int i = 0; i < 16; i++) {
+                printf("%x", uuid[i]);
+                if((i + 1) % 4 == 0)
+                        printf("-");
+        }
         return 0;
 }
