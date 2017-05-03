@@ -128,5 +128,12 @@ int main(int argc, char *argv[])
                 if((i + 1) % 4 == 0)
                         printf("-");
         }
+
+        LoadMainCmd mainCmd = bin.getLoadMainCmd();
+
+        printf("\nthe main command\n");
+        printf ("entryOffset: %llu, stacksize: %llu", mainCmd.getEntryOffset(),
+mainCmd.getStackSize());
+
         return 0;
 }

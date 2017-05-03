@@ -35,6 +35,10 @@ MachO::MachO(char *fileName)
                                 FileUtils::readBytes(file, (char *)uuid, UUID_SIZE);
                                 break;
 
+                        case LC_MAIN:
+                                loadMainCmd = LoadMainCmd(file);
+                                break;
+
                         /*parsing not yet implemented - -skip*/
                         default:
                                 FileUtils::readUint32(file, &size);
@@ -106,6 +110,11 @@ LoadDyLinkerCmd *MachO::getLoadDyLinkerCmd()
 uint8_t *MachO::getUUID()
 {
         return uuid;
+}
+
+LoadMainCmd MachO::getLoadMainCmd()
+{
+        return loadMainCmd;
 }
 
 MachO::~MachO()

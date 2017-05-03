@@ -1,4 +1,4 @@
-#include "LoadDyLinkerCmd.hpp"
+#include "SimpleLoadCommands.hpp"
 
 LoadDyLinkerCmd::LoadDyLinkerCmd(FILE *file)
 {
@@ -30,4 +30,31 @@ char * LoadDyLinkerCmd::getLinkerName()
 LoadDyLinkerCmd::~LoadDyLinkerCmd()
 {
         delete linkerName;
+}
+
+
+LoadMainCmd::LoadMainCmd(FILE *file)
+{
+        uint32_t cmdSize;
+
+        FileUtils::readUint32(file, &cmdSize);
+
+        FileUtils::readUint64(file, &entryOffset);
+
+        FileUtils::readUint64(file, &stackSize);
+}
+
+LoadMainCmd::LoadMainCmd()
+{
+
+}
+
+uint64_t LoadMainCmd::getEntryOffset()
+{
+        return entryOffset;
+}
+
+uint64_t LoadMainCmd::getStackSize()
+{
+        return stackSize;
 }

@@ -16,7 +16,7 @@
 #include "SymbolTableEntry.hpp"
 #include "SymbolTableEntry32.hpp"
 #include "SymbolTableEntry64.hpp"
-#include "LoadDyLinkerCmd.hpp"
+#include "SimpleLoadCommands.hpp"
 
 #define LC_SEGMENT32            0x01
 #define LC_SEGMENT64            0x19
@@ -25,6 +25,9 @@
 
 #define LC_UUID                 0x1B
 #define UUID_SIZE               16
+
+#define LC_REQ_DYLD             0x80000000
+#define LC_MAIN                 (0x28|LC_REQ_DYLD)
 
 /*high level class*/
 /*entry point of the library*/
@@ -38,14 +41,20 @@ private:
         /*flags to avoid recomputing*/
         bool stringTableComputed;
         bool symbolTableComputed;
+
         /*the string table*/
         StringTable *stringTable;
+
         /*entries in the symbol table*/
         std::vector<SymbolTableEntry *> symbolTable;
+
         /*dinmaic linker load command*/
         LoadDyLinkerCmd *loadDyLinkerCmd;
 
-        /*the uuid is a128-bit unique random number that*/
+        /*entry point command*/
+        LoadMainCmd loadMainCmd;
+
+        /*the uuid is a 128-bit unique random number that*/
         /*identifies an object produced by the static link editor*/
         uint8_t uuid[UUID_SIZE];
 
@@ -58,6 +67,7 @@ public:
         std::vector<SymbolTableEntry *> getSymbolTable();
         LoadDyLinkerCmd *getLoadDyLinkerCmd();
         uint8_t *getUUID();
+        LoadMainCmd getLoadMainCmd();
 
 
         ~MachO();
