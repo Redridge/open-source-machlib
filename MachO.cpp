@@ -2,12 +2,13 @@
 
 MachO::MachO(char *fileName)
 {
-        uint32_t command, index;
+        uint32_t command, index, size;
 
         file = fopen(fileName, "rb");
         /*parse header*/
         header = MachHeader(file);
 
+        loadDyLinkerCmd = NULL;
         /*parse load commands*/
         for (index = 0; index < header.getNumberCmds(); index++) {
                 FileUtils::readUint32(file, &command);
@@ -26,9 +27,21 @@ MachO::MachO(char *fileName)
                                 symbolTableHeader = SymbolTableHeader(file);
                                 break;
 
+                        case LC_LOAD_DYLINKER:
+                                loadDyLinkerCmd = new LoadDyLinkerCmd(file);
+                                break;
+
+                        case LC_UUID:
+                                FileUtils::readUint32(file, &size);
+                                FileUtils::readBytes(file, (char *)uuid, UUID_SIZE);
+                                break;
+
+                        case LC_MAIN:
+                                loadMainCmd = LoadMainCmd(file);
+                                break;
+
                         /*parsing not yet implemented - -skip*/
                         default:
-                                uint32_t size;
                                 FileUtils::readUint32(file, &size);
                                 fseek(file, size - 8, SEEK_CUR);
                                 break;
@@ -90,6 +103,22 @@ std::vector<SymbolTableEntry *> MachO::getSymbolTable()
         return symbolTable;
 }
 
+LoadDyLinkerCmd *MachO::getLoadDyLinkerCmd()
+{
+        return loadDyLinkerCmd;
+}
+
+uint8_t *MachO::getUUID()
+{
+        return uuid;
+}
+
+LoadMainCmd MachO::getLoadMainCmd()
+{
+        //TODO not all files have main
+        return loadMainCmd;
+}
+
 MachO::~MachO()
 {
         int index;
@@ -105,6 +134,8 @@ MachO::~MachO()
                 for(index = 0; index < symbolTable.size(); index++)
                         delete symbolTable[index];
         }
+
+        delete loadDyLinkerCmd;
 
         fclose(file);
 }
