@@ -40,6 +40,10 @@ MachO::MachO(char *fileName)
                                 loadMainCmd = LoadMainCmd(file);
                                 break;
 
+                        case LC_LOAD_DYLIB:
+                                dynamicLibraries.push_back(new LibraryInfo(file));
+                                break;
+
                         /*parsing not yet implemented - -skip*/
                         default:
                                 FileUtils::readUint32(file, &size);
@@ -119,6 +123,24 @@ LoadMainCmd MachO::getLoadMainCmd()
         return loadMainCmd;
 }
 
+std::vector<LibraryInfo *> MachO::getDynamicLibrariesInfo()
+{
+        return dynamicLibraries;
+}
+
+std::vector<char *> MachO::listDynamicLibraries()
+{
+        int index;
+        std::vector<char *> names(dynamicLibraries.size());
+
+        for(index = 0; index < dynamicLibraries.size(); index++)
+                names[index] = dynamicLibraries[index]->getName();
+
+        return names;
+
+
+}
+
 MachO::~MachO()
 {
         int index;
@@ -136,6 +158,9 @@ MachO::~MachO()
         }
 
         delete loadDyLinkerCmd;
+
+        for(index = 0; index < dynamicLibraries.size(); index++)
+                delete dynamicLibraries[index];
 
         fclose(file);
 }

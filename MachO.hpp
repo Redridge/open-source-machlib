@@ -17,6 +17,7 @@
 #include "SymbolTableEntry32.hpp"
 #include "SymbolTableEntry64.hpp"
 #include "SimpleLoadCommands.hpp"
+#include "LibraryInfo.hpp"
 
 #define LC_SEGMENT32            0x01
 #define LC_SEGMENT64            0x19
@@ -28,6 +29,8 @@
 
 #define LC_REQ_DYLD             0x80000000
 #define LC_MAIN                 (0x28|LC_REQ_DYLD)
+
+#define LC_LOAD_DYLIB           0x0C
 
 /*high level class*/
 /*entry point of the library*/
@@ -58,17 +61,30 @@ private:
         /*identifies an object produced by the static link editor*/
         uint8_t uuid[UUID_SIZE];
 
+        /*Dynamicly linked shared libraries*/
+        std::vector<LibraryInfo *> dynamicLibraries;
+
 public:
         MachO(char  *fileName);
+
         MachHeader getHeader();
+
         std::vector<Segment *> getSegments();
+
         SymbolTableHeader getSymbolTableHeader();
+
         StringTable *getStringTable();
+
         std::vector<SymbolTableEntry *> getSymbolTable();
+
         LoadDyLinkerCmd *getLoadDyLinkerCmd();
+
         uint8_t *getUUID();
+
         LoadMainCmd getLoadMainCmd();
 
+        std::vector<LibraryInfo *> getDynamicLibrariesInfo();
+        std::vector<char *> listDynamicLibraries();
 
         ~MachO();
 };

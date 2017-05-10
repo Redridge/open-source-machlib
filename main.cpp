@@ -85,6 +85,12 @@ void print_symbol(SymbolTableEntry *entry)
         printf("value: %llu\n", entry->getValue());
 }
 
+void print_lib(LibraryInfo * lib)
+{
+        printf("version:%u\n name: %s\n", lib->getCurrentVersion(), lib->getName());
+
+        printf("timestamp: %u\n Comp: %u\n", lib->getTimestamp(), lib->getCompatibilityVersion());
+}
 /*listing of segments and sections*/
 int main(int argc, char *argv[])
 {
@@ -118,7 +124,7 @@ int main(int argc, char *argv[])
                 //print_symbol(symbolTable[i]);
         }
 
-        LoadDyLinkerCmd *cmd = bin.getLoadDyLinkerCmd();
+        /*LoadDyLinkerCmd *cmd = bin.getLoadDyLinkerCmd();
         printf(" the linker name is %s\n", cmd->getLinkerName() );
 
         uint8_t *uuid = bin.getUUID();
@@ -133,7 +139,15 @@ int main(int argc, char *argv[])
 
         printf("\nthe main command\n");
         printf ("entryOffset: %llu, stacksize: %llu", mainCmd.getEntryOffset(),
-mainCmd.getStackSize());
+mainCmd.getStackSize());*/
+
+        /*std::vector<LibraryInfo *> libs = bin.getDynamicLibrariesInfo();
+        for(int i = 0; i < libs.size(); i++)
+                print_lib(libs[i]);*/
+
+        std::vector<char *> names = bin.listDynamicLibraries();
+        for(int i = 0; i < names.size(); i++)
+                printf("%s\n", names[i]);
 
         return 0;
 }
