@@ -8,6 +8,7 @@ MachO::MachO(char *fileName)
         /*parse header*/
         header = MachHeader(file);
 
+        loadDyLinkerCmd = NULL;
         /*parse load commands*/
         for (index = 0; index < header.getNumberCmds(); index++) {
                 FileUtils::readUint32(file, &command);
@@ -114,6 +115,7 @@ uint8_t *MachO::getUUID()
 
 LoadMainCmd MachO::getLoadMainCmd()
 {
+        //TODO not all files have main
         return loadMainCmd;
 }
 
