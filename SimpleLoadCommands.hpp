@@ -38,5 +38,21 @@ public:
 };
 
 
+/*It's used by tools that need to symbolicate addresses in crash logs, 
+samples, spindumps, etc. to determine
+if a given address falls inside a function*/
+class FunctionStartsCmd {
+
+private:
+        uint32_t dataOffset;
+        uint32_t dataSize;
+
+public:
+        FunctionStartsCmd(FILE *file);
+        FunctionStartsCmd();
+        uint32_t getDataOffset();
+        uint32_t getDataSize();
+
+};
 
 #endif

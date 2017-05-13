@@ -44,6 +44,10 @@ MachO::MachO(char *fileName)
                                 dynamicLibraries.push_back(new LibraryInfo(file));
                                 break;
 
+                        case LC_FUNCTION_STARTS:
+                                functionStartsCmd = FunctionStartsCmd(file);
+                                break;
+
                         /*parsing not yet implemented - -skip*/
                         default:
                                 FileUtils::readUint32(file, &size);
@@ -54,6 +58,8 @@ MachO::MachO(char *fileName)
 
         stringTableComputed = false;
         symbolTableComputed = false;
+        functionsOffsetComputed = false;
+
 
 }
 
@@ -64,6 +70,38 @@ MachHeader MachO::getHeader()
 std::vector<Segment *>MachO::getSegments()
 {
         return segments;
+}
+
+Section *MachO::getSectionByIndex(uint32_t index)
+{
+        uint32_t segment_index = 0, section_index = 0, i;
+
+        while(segment_index < segments.size()) {
+                Segment * seg = segments[segment_index];
+                std::vector<Section *> sections =  seg->getSections();
+
+                for( i = 0; i < sections.size(); i++) {
+                        if (section_index == index - 1)
+                                return sections[i];
+                        section_index++;
+                }
+                segment_index++;
+        }
+        printf("for section %d null\n", index);
+        return NULL;
+        //TODO throw exception when index too big;
+}
+
+Segment *MachO::getSegmentByName(char * name)
+{
+        uint32_t index;
+
+        for(index = 0; index < segments.size(); index++)
+                if(strcmp (segments[index]->getName(), name ) == 0)
+                        return segments[index];
+
+        printf("for segment %s null\n", name);
+        return NULL;
 }
 
 SymbolTableHeader MachO::getSymbolTableHeader()
@@ -139,6 +177,94 @@ std::vector<char *> MachO::listDynamicLibraries()
         return names;
 
 
+}
+
+FunctionStartsCmd MachO::getFunctionStartsCmd()
+{
+        return functionStartsCmd;
+}
+
+std::map<uint64_t, char *> MachO::getFunctionsOffset()
+{
+        uint64_t addr;
+        uint8_t *start, *end, *data, *cursor;
+        uint32_t size = functionStartsCmd.getDataSize();
+
+        addr = getSegmentByName((char*)"__TEXT")->getFileOffset();
+        computeSymbolsFileOffset();
+
+        if (!functionsOffsetComputed && size > 0) {
+                data = new uint8_t[size];
+                fseek(file, functionStartsCmd.getDataOffset(), SEEK_SET);
+                FileUtils::readBytes(file, (char *)data, size);
+
+                start = data;
+                end = &data[size];
+
+                for (cursor = start; (*cursor != 0) && (cursor < end); ) {
+                        uint64_t delta = 0;
+                        uint32_t shift = 0;
+                        bool isMore = true;
+
+                        do {
+                                uint8_t byte = *cursor++;
+                                delta |= ((byte & 0x7F) << shift);
+                                shift += 7;
+                                if (byte < 0x80) {
+                                        addr += delta;
+                                        functionsOffset[addr] = getFunctionName(addr);
+                                        //printf("name: %s\n", functionsOffset[addr]);
+                                        isMore = false;
+
+                                }
+                        } while(isMore);
+                }
+
+                delete data;
+        }
+
+        return functionsOffset;
+
+
+}
+
+void MachO::computeSymbolsFileOffset()
+{
+        std::vector<SymbolTableEntry *> symbolTable;
+        uint32_t index;
+        uint64_t symbolFileoffset, sectionOffset;
+        Section *section;
+        Segment *segment;
+
+        symbolTable = getSymbolTable();
+        for (index = 0; index < symbolTable.size(); index++) {
+                if (symbolTable[index]->getSectionIndex() != 0) {
+                        //printf("asddasdasd");
+                        section = getSectionByIndex(symbolTable[index]->getSectionIndex());
+                        segment = getSegmentByName(section->getSegmentName());
+
+                        uint64_t sectionVirtualAddress = segment->getVirtualAddress() +
+                                                section->getOffset();
+                        uint64_t sectionFileOffset = segment->getFileOffset() +
+                                                section->getOffset();
+
+                        sectionOffset = symbolTable[index]->getValue() - sectionVirtualAddress;
+                        symbolFileoffset = sectionFileOffset + sectionOffset;
+
+                        symbolsFileOffset[symbolFileoffset] = symbolTable[index]->getName();
+                        //symbolsFileOffset[symbolFileoffset + 1] = symbolTable[index]->getName();
+                        //printf("name %s - 0x%llx\n", symbolTable[index]->getName(), symbolFileoffset);
+
+                }
+        }
+
+}
+
+char *MachO::getFunctionName(uint64_t functionFileOffset)
+{
+        if(symbolsFileOffset.find(functionFileOffset) == symbolsFileOffset.end())
+                return NULL;
+        return symbolsFileOffset.at(functionFileOffset);
 }
 
 MachO::~MachO()

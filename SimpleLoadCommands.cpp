@@ -58,3 +58,31 @@ uint64_t LoadMainCmd::getStackSize()
 {
         return stackSize;
 }
+
+
+FunctionStartsCmd::FunctionStartsCmd()
+{
+        dataOffset = 0;
+        dataSize = 0;
+}
+
+FunctionStartsCmd::FunctionStartsCmd(FILE *file)
+{
+        uint32_t cmdSize;
+
+        FileUtils::readUint32(file, &cmdSize);
+
+        FileUtils::readUint32(file, &dataOffset);
+
+        FileUtils::readUint32(file, &dataSize);
+}
+
+uint32_t FunctionStartsCmd::getDataOffset()
+{
+        return dataOffset;
+}
+
+uint32_t FunctionStartsCmd::getDataSize()
+{
+        return dataSize;
+}

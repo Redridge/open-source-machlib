@@ -82,7 +82,7 @@ void print_symbol(SymbolTableEntry *entry)
         if(entry->isUndefined())
         printf("library ordinal: %d\n", entry->getLibraryOrdinal());
 
-        printf("value: %llu\n", entry->getValue());
+        printf("value: 0x%llx\n", entry->getValue());
 }
 
 void print_lib(LibraryInfo * lib)
@@ -167,6 +167,22 @@ mainCmd.getStackSize());
                 for(int i = 0; i < names.size(); i++)
                         printf("%s\n", names[i]);
                 }
+
+        if(option == 8) {
+                FunctionStartsCmd fcstart = bin.getFunctionStartsCmd();
+
+                printf("FunctionStartsCmd ------------\n");
+                printf("dataOffset: %u\ndataSize: %u\n", fcstart.getDataOffset(),
+                fcstart.getDataSize());
+
+                std::map<uint64_t, char *> starts = bin.getFunctionsOffset();
+                std::map<uint64_t, char *>::iterator it;
+
+                for(it = starts.begin(); it != starts.end(); ++it)
+                        printf("0x%llx ----- %s\n", it->first, it->second);
+                /*for(int i = 0; i < starts.size(); i++)
+                        printf("0x%llx\n", starts[i]);*/
+        }
 
         return 0;
 }
