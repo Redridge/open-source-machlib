@@ -95,59 +95,78 @@ void print_lib(LibraryInfo * lib)
 int main(int argc, char *argv[])
 {
         FILE *file;
+        int option;
 
-        if (argc != 2) {
-                printf("Usage: %s <binary>\n", argv[0]);
+        if (argc != 3) {
+                printf("Usage: %s <binary> <option>\n", argv[0]);
                 return -1;
         }
+        sscanf(argv[2], "%d", &option);
+
+
         MachO bin(argv[1]);
-        MachHeader header = bin.getHeader();
-        //print_header(header);
-
-        std::vector<Segment *> segments = bin.getSegments();
-
-        for(int i = 0; i < segments.size(); i++) {
-               //print_segment(segments[i]);
+        if(option == 1) {
+                MachHeader header = bin.getHeader();
+                print_header(header);
         }
 
-        SymbolTableHeader symbolTableHeader = bin.getSymbolTableHeader();
-        //print_symbol_header(symbolTableHeader);
+        if(option == 2) {
+                std::vector<Segment *> segments = bin.getSegments();
 
-        StringTable *stringTable = bin.getStringTable();
-        for(int i = 0; i < stringTable->getNumberOfStrings(); i++) {
-                //printf("%d---%s\n", i,  stringTable->get(i) );
+                for(int i = 0; i < segments.size(); i++) {
+                        print_segment(segments[i]);
+                }
         }
 
-        std::vector<SymbolTableEntry *> symbolTable = bin.getSymbolTable();
-
-        for(int i = 0; i < symbolTable.size(); i++) {
-                //print_symbol(symbolTable[i]);
+        if(option == 3) {
+                SymbolTableHeader symbolTableHeader = bin.getSymbolTableHeader();
+                print_symbol_header(symbolTableHeader);
         }
 
-        /*LoadDyLinkerCmd *cmd = bin.getLoadDyLinkerCmd();
-        printf(" the linker name is %s\n", cmd->getLinkerName() );
-
-        uint8_t *uuid = bin.getUUID();
-        printf("the uuid is:\n");
-        for(int i = 0; i < 16; i++) {
-                printf("%x", uuid[i]);
-                if((i + 1) % 4 == 0)
-                        printf("-");
+        if(option == 4) {
+                StringTable *stringTable = bin.getStringTable();
+                for(int i = 0; i < stringTable->getNumberOfStrings(); i++) {
+                        printf("%d---%s\n", i,  stringTable->get(i) );
+                }
         }
+
+        if(option == 5) {
+                std::vector<SymbolTableEntry *> symbolTable = bin.getSymbolTable();
+
+                for(int i = 0; i < symbolTable.size(); i++) {
+                        print_symbol(symbolTable[i]);
+                        printf("\n\n");
+                }
+        }
+
+        if(option == 6) {
+                LoadDyLinkerCmd *cmd = bin.getLoadDyLinkerCmd();
+                printf(" the linker name is %s\n", cmd->getLinkerName() );
+
+                uint8_t *uuid = bin.getUUID();
+                printf("the uuid is:\n");
+                for(int i = 0; i < 16; i++) {
+                        printf("%x", uuid[i]);
+                        if((i + 1) % 4 == 0)
+                                printf("-");
+                        }
 
         LoadMainCmd mainCmd = bin.getLoadMainCmd();
 
         printf("\nthe main command\n");
         printf ("entryOffset: %llu, stacksize: %llu", mainCmd.getEntryOffset(),
-mainCmd.getStackSize());*/
+mainCmd.getStackSize());
+        }
 
+        if(option == 7) {
         /*std::vector<LibraryInfo *> libs = bin.getDynamicLibrariesInfo();
         for(int i = 0; i < libs.size(); i++)
                 print_lib(libs[i]);*/
 
-        std::vector<char *> names = bin.listDynamicLibraries();
-        for(int i = 0; i < names.size(); i++)
-                printf("%s\n", names[i]);
+                std::vector<char *> names = bin.listDynamicLibraries();
+                for(int i = 0; i < names.size(); i++)
+                        printf("%s\n", names[i]);
+                }
 
         return 0;
 }
