@@ -4,6 +4,7 @@ MachO::MachO(char *fileName)
 {
         uint32_t command, index, size;
 
+        this->fileName = fileName;
         file = fopen(fileName, "rb");
         /*parse header*/
         header = MachHeader(file);
@@ -221,6 +222,7 @@ std::map<uint64_t, char *> MachO::getFunctionsOffset()
                 }
 
                 delete data;
+                functionsOffsetComputed = true;
         }
 
         return functionsOffset;
@@ -252,7 +254,7 @@ void MachO::computeSymbolsFileOffset()
                         symbolFileoffset = sectionFileOffset + sectionOffset;
 
                         symbolsFileOffset[symbolFileoffset] = symbolTable[index]->getName();
-                        //symbolsFileOffset[symbolFileoffset + 1] = symbolTable[index]->getName();
+                        symbolsFileOffset[symbolFileoffset + 1] = symbolTable[index]->getName();
                         //printf("name %s - 0x%llx\n", symbolTable[index]->getName(), symbolFileoffset);
 
                 }
@@ -267,6 +269,11 @@ char *MachO::getFunctionName(uint64_t functionFileOffset)
         return symbolsFileOffset.at(functionFileOffset);
 }
 
+
+char *MachO::getFileName()
+{
+        return fileName;
+}
 MachO::~MachO()
 {
         int index;

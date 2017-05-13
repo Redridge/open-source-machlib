@@ -41,6 +41,7 @@
 class MachO
 {
 private:
+        char *fileName;
         FILE *file;
         MachHeader header;
         std::vector<Segment *> segments;
@@ -81,6 +82,9 @@ private:
 
 public:
         MachO(char  *fileName);
+
+        char *getFileName();
+
 
         MachHeader getHeader();
 

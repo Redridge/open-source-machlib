@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <vector>
 #include "MachO.hpp"
+#include "FileReader.hpp"
 
 
 void print_header(MachHeader header)
@@ -182,6 +183,17 @@ mainCmd.getStackSize());
                         printf("0x%llx ----- %s\n", it->first, it->second);
                 /*for(int i = 0; i < starts.size(); i++)
                         printf("0x%llx\n", starts[i]);*/
+        }
+
+        if(option == 9) {
+                FileReader fileReader(&bin);
+                Section *sec = bin.getSectionByIndex(1);
+                Segment *seg = bin.getSegmentByName(sec->getSegmentName());
+                uint64_t offset = seg->getFileOffset() + sec->getOffset();
+                printf("%s %s\n", sec->getSegmentName(), sec->getSectionName());
+                printf("%llu %llu", offset, sec->getSize());
+
+                fileReader.Disassemble(offset, sec->getSize());
         }
 
         return 0;
