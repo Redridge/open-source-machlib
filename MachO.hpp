@@ -98,6 +98,7 @@ public:
         StringTable *getStringTable();
 
         std::vector<SymbolTableEntry *> getSymbolTable();
+        uint64_t getSymbolFileOffset(SymbolTableEntry *symbol);
 
         LoadDyLinkerCmd *getLoadDyLinkerCmd();
 

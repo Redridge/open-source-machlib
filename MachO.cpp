@@ -234,32 +234,43 @@ void MachO::computeSymbolsFileOffset()
 {
         std::vector<SymbolTableEntry *> symbolTable;
         uint32_t index;
-        uint64_t symbolFileoffset, sectionOffset;
-        Section *section;
-        Segment *segment;
+        uint64_t symbolFileoffset; //sectionOffset;
+        /*Section *section;
+        Segment *segment;*/
 
         symbolTable = getSymbolTable();
         for (index = 0; index < symbolTable.size(); index++) {
-                if (symbolTable[index]->getSectionIndex() != 0) {
-                        //printf("asddasdasd");
-                        section = getSectionByIndex(symbolTable[index]->getSectionIndex());
-                        segment = getSegmentByName(section->getSegmentName());
-
-                        uint64_t sectionVirtualAddress = segment->getVirtualAddress() +
-                                                section->getOffset();
-                        uint64_t sectionFileOffset = segment->getFileOffset() +
-                                                section->getOffset();
-
-                        sectionOffset = symbolTable[index]->getValue() - sectionVirtualAddress;
-                        symbolFileoffset = sectionFileOffset + sectionOffset;
-
+                symbolFileoffset = getSymbolFileOffset(symbolTable[index]);
+                if (symbolFileoffset != 0) {
                         symbolsFileOffset[symbolFileoffset] = symbolTable[index]->getName();
                         symbolsFileOffset[symbolFileoffset + 1] = symbolTable[index]->getName();
-                        //printf("name %s - 0x%llx\n", symbolTable[index]->getName(), symbolFileoffset);
-
                 }
         }
 
+}
+
+uint64_t MachO::getSymbolFileOffset(SymbolTableEntry *symbol)
+{
+
+        uint64_t symbolFileoffset = 0, sectionOffset;
+        Section *section;
+        Segment *segment;
+
+        if (symbol->getSectionIndex() == 1  &&
+                symbol->isDefinedInSection()) {
+                section = getSectionByIndex(symbol->getSectionIndex());
+                segment = getSegmentByName(section->getSegmentName());
+
+                uint64_t sectionVirtualAddress = segment->getVirtualAddress() +
+                                        section->getOffset();
+                uint64_t sectionFileOffset = segment->getFileOffset() +
+                                        section->getOffset();
+
+                sectionOffset = symbol->getValue() - sectionVirtualAddress;
+                symbolFileoffset = sectionFileOffset + sectionOffset;
+        }
+
+        return symbolFileoffset;
 }
 
 char *MachO::getFunctionName(uint64_t functionFileOffset)

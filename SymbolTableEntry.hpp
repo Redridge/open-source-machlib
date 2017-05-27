@@ -68,6 +68,9 @@
  */
 #define SYMBOL_RESOLVER_MASK  0x0100
 
+
+#define ARM_THUMB_MASK               0x0008
+
 /*class for an entry in the symbol table independent of 32bit or 64bit architecture*/
 class SymbolTableEntry
 {
@@ -112,6 +115,8 @@ public:
         bool isWeakDefined();
         bool isRefToWeakSymbol();
         bool isSymbolResolver();
+
+        bool isArmThumb();
 
         virtual ~SymbolTableEntry();
 

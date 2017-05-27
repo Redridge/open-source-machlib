@@ -184,3 +184,8 @@ bool SymbolTableEntry::isSymbolResolver()
 {
         return (description & SYMBOL_RESOLVER_MASK);
 }
+
+bool SymbolTableEntry::isArmThumb()
+{
+        return (description & ARM_THUMB_MASK);
+}

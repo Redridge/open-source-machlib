@@ -185,15 +185,14 @@ mainCmd.getStackSize());
                         printf("0x%llx\n", starts[i]);*/
         }
 
+        FileReader fileReader(&bin);
         if(option == 9) {
-                FileReader fileReader(&bin);
-                Section *sec = bin.getSectionByIndex(1);
-                Segment *seg = bin.getSegmentByName(sec->getSegmentName());
-                uint64_t offset = seg->getFileOffset() + sec->getOffset();
-                printf("%s %s\n", sec->getSegmentName(), sec->getSectionName());
-                printf("%llu %llu", offset, sec->getSize());
 
-                fileReader.Disassemble(offset, sec->getSize());
+                fileReader.Disassemble();
+        }
+
+        if(option == 10) {
+                fileReader.Disassemble("_print_header");
         }
 
         return 0;
