@@ -25,38 +25,44 @@ struct myComp {
 class FileReader
 {
 private:
+
         MachO *binary;
         FILE *file;
+        /*maps for functions offset and names*/
         std::map<uint64_t, char *> functionStartsMap;
         std::map<char *, uint64_t, myComp> functionNamesMap;
         std::vector<uint64_t> functionsOffset;
+        /*capstone variables*/
         cs_arch  capstoneArchOption;
         cs_mode capstoneModeOption;
         csh capstoneHandle;
 
-        /*std::map<uint64_t, SymbolTableEntry *> symbolsMap;
-        std::vector<uint64_t> symbolsOffset;*/
-
         static std::map<uint32_t, cs_arch> capstoneArch;
         static std::map<uint32_t, cs_arch>makeCapstoneArch();
 
-        //void makeSymbolsMap();
-        void Disassemble(uint64_t fileOffset, uint64_t size);
+        /*helper functions*/
+        void DisassembleAll(uint64_t fileOffset, uint64_t size);
 
-        void Disassemblex86( const uint8_t **code,
+        void Disassemble(uint64_t fileOffset, uint64_t codeSize);
+
+        void Disassemblex86(const uint8_t **code,
+                uint64_t size, uint64_t startAddress, bool print);
+
+        void DisassembleARM(const uint8_t **code,
                 uint64_t size, uint64_t startAddress);
 
-        void DisassembleARM( const uint8_t **code,
-                uint64_t size, uint64_t startAddress);
+        bool getFunctionBoundaries(uint64_t offset, uint64_t *begin,
+                uint64_t *end);
 
         cs_mode getCapstoneMode(uint64_t fileOffset);
-        uint64_t getNextSymbolOffset(uint64_t currentOffset);
+        uint64_t getNextOffset(uint64_t currentOffset);
 
 
 public:
         FileReader(MachO *binary);
         void Disassemble();
         void Disassemble(char *functionName);
+        void Disassemble(uint64_t fileOffset);
 
         ~FileReader();
 };

@@ -192,7 +192,10 @@ mainCmd.getStackSize());
         }
 
         if(option == 10) {
-                fileReader.Disassemble("_print_header");
+                fileReader.Disassemble("_main");
+        }
+        if(option == 11) {
+                fileReader.Disassemble(7030);
         }
 
         return 0;

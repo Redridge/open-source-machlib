@@ -73,6 +73,8 @@ std::vector<Segment *>MachO::getSegments()
         return segments;
 }
 
+/*get's a section based on the index*/
+/*the index starts at 1*/
 Section *MachO::getSectionByIndex(uint32_t index)
 {
         uint32_t segment_index = 0, section_index = 0, i;
@@ -88,7 +90,7 @@ Section *MachO::getSectionByIndex(uint32_t index)
                 }
                 segment_index++;
         }
-        printf("for section %d null\n", index);
+        printf("invalid section index %d\n", index);
         return NULL;
         //TODO throw exception when index too big;
 }
@@ -101,7 +103,7 @@ Segment *MachO::getSegmentByName(char * name)
                 if(strcmp (segments[index]->getName(), name ) == 0)
                         return segments[index];
 
-        printf("for segment %s null\n", name);
+        printf("invalid segment name %s\n", name);
         return NULL;
 }
 
@@ -176,8 +178,6 @@ std::vector<char *> MachO::listDynamicLibraries()
                 names[index] = dynamicLibraries[index]->getName();
 
         return names;
-
-
 }
 
 FunctionStartsCmd MachO::getFunctionStartsCmd()
@@ -214,7 +214,6 @@ std::map<uint64_t, char *> MachO::getFunctionsOffset()
                                 if (byte < 0x80) {
                                         addr += delta;
                                         functionsOffset[addr] = getFunctionName(addr);
-                                        //printf("name: %s\n", functionsOffset[addr]);
                                         isMore = false;
 
                                 }
@@ -230,25 +229,26 @@ std::map<uint64_t, char *> MachO::getFunctionsOffset()
 
 }
 
+/*computes the symbol file offsets*/
 void MachO::computeSymbolsFileOffset()
 {
         std::vector<SymbolTableEntry *> symbolTable;
         uint32_t index;
-        uint64_t symbolFileoffset; //sectionOffset;
-        /*Section *section;
-        Segment *segment;*/
+        uint64_t symbolFileoffset;
 
         symbolTable = getSymbolTable();
         for (index = 0; index < symbolTable.size(); index++) {
                 symbolFileoffset = getSymbolFileOffset(symbolTable[index]);
                 if (symbolFileoffset != 0) {
                         symbolsFileOffset[symbolFileoffset] = symbolTable[index]->getName();
+                        /*hack for thumb offset*/
                         symbolsFileOffset[symbolFileoffset + 1] = symbolTable[index]->getName();
                 }
         }
 
 }
 
+/*computes the fileoffset for a symbol*/
 uint64_t MachO::getSymbolFileOffset(SymbolTableEntry *symbol)
 {
 
@@ -273,10 +273,15 @@ uint64_t MachO::getSymbolFileOffset(SymbolTableEntry *symbol)
         return symbolFileoffset;
 }
 
+/*get's the name for a given offset*/
 char *MachO::getFunctionName(uint64_t functionFileOffset)
 {
-        if(symbolsFileOffset.find(functionFileOffset) == symbolsFileOffset.end())
-                return NULL;
+        if(symbolsFileOffset.find(functionFileOffset) == symbolsFileOffset.end()) {
+                //TODO dont forget to free this stuff
+                char * name = new char[20];
+                sprintf(name, "%s%llu", NAMEPREFIX, functionFileOffset);
+                return name;
+        }
         return symbolsFileOffset.at(functionFileOffset);
 }
 

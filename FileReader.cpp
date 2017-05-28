@@ -1,52 +1,38 @@
 #include "FileReader.hpp"
 
+/*generate constants for capstone configurations*/
 std::map<uint32_t, cs_arch> FileReader::makeCapstoneArch()
 {
         std::map<uint32_t, cs_arch> map;
         map[CPU_TYPE_I386] = CS_ARCH_X86;
         map[CPU_TYPE_X86_64] = CS_ARCH_X86;
         map[CPU_TYPE_ARM] = CS_ARCH_ARM;
-        map[CPU_TYPE_ARM64] = CS_ARCH_ARM64;
 
         return map;
 }
 std::map<uint32_t, cs_arch> FileReader::capstoneArch = FileReader::makeCapstoneArch();
 
 
-/*void FileReader::makeSymbolsMap()
-{
-        uint64_t symbolOffset;
-        uint32_t index;
-
-        std::vector<SymbolTableEntry *> symbols = binary->getSymbolTable();
-        for (index = 0; index < symbols.size(); index++) {
-                symbolOffset = binary->getSymbolFileOffset(symbols[index]);
-                if (symbolOffset != 0) {
-                        symbolsOffset.push_back(symbolOffset);
-                        symbolsMap[symbolOffset] = symbols[index];
-                }
-        }
-
-        std::sort(symbolsOffset.begin(), symbolsOffset.end());
-}*/
-
 FileReader::FileReader(MachO *binary)
 {
+        Section *sec;
+        Segment *seg;
+        uint64_t offset;
+
         this->binary = binary;
+        /*get the map with the starts offset of each function*/
         functionStartsMap = binary->getFunctionsOffset();
-        printf("opened %s\n", this->binary->getFileName());
         file = fopen(this->binary->getFileName(), "rb");
 
+        /*decide on capstone mode and arch  based on the mach header*/
         MachHeader header = this->binary->getHeader();
         if (capstoneArch.find(header.getCpuType()) == capstoneArch.end()) {
                 //TODO throw exception when cpu not supported;
-                printf("cpu not supported\n");
+                printf("cpu type not supported\n");
                 return;
         }
 
         capstoneArchOption = capstoneArch[header.getCpuType()];
-        if(capstoneArchOption == CS_ARCH_ARM)
-                printf("funcking yeah \n");
         capstoneModeOption = CS_MODE_THUMB;
         if (header.getIs32()) {
                 if (capstoneArchOption == CS_ARCH_X86)
@@ -54,80 +40,108 @@ FileReader::FileReader(MachO *binary)
                 }
         else {
                 if (capstoneArchOption == CS_ARCH_X86)
-                        capstoneModeOption = CS_MODE_32;
+                        capstoneModeOption = CS_MODE_64;
                 }
-        if(capstoneModeOption == CS_MODE_THUMB)
-                printf("fucking yeah\n");
 
         if (cs_open(capstoneArchOption, capstoneModeOption, &capstoneHandle) != CS_ERR_OK)
-                printf("mare eroare\n");
+                printf("error opening capstone\n");
                 //TODO throw exception
-
-        //makeSymbolsMap();
-
-        functionStartsMap = this->binary->getFunctionsOffset();
 
         std::map<uint64_t, char *>::iterator it;
 
+        /*extract only the functions offsets*/
+        /*computes the name offset map*/
         for (it = functionStartsMap.begin(); it != functionStartsMap.end(); ++it) {
-                if (it->first % 2)
+                if (it->first % 2) {
                         functionsOffset.push_back(it->first - 1);
-                else
+                        functionNamesMap[it->second] = it->first - 1;
+                }
+                else {
                         functionsOffset.push_back(it->first);
+                        functionNamesMap[it->second] = it->first;
+                }
 
-                functionNamesMap[it->second] = it->first;
+
         }
+
+        /*insert in the functions offset the end of the __text section*/
+        sec = binary->getSectionByIndex(1);
+        seg = binary->getSegmentByName(sec->getSegmentName());
+        offset = seg->getFileOffset() + sec->getOffset() + sec->getSize();
+        functionsOffset.push_back(offset);
         std::sort(functionsOffset.begin(), functionsOffset.end());
-
-
-        std::map<char *, uint64_t>::iterator it2;
-        for (it2 = functionNamesMap.begin(); it2 != functionNamesMap.end(); ++it2) {
-
-                printf ("%s --- %llx\n", it2->first, it2->second);
-        }
 
 }
 
+/*Disassemble all code*/
 void FileReader::Disassemble()
 {
         Section *sec;
         Segment *seg;
         uint64_t offset;
 
+        /*get the size of the code*/
         sec = binary->getSectionByIndex(1);
         seg = binary->getSegmentByName(sec->getSegmentName());
 
         offset = seg->getFileOffset() + sec->getOffset();
         printf("%s %s\n", sec->getSegmentName(), sec->getSectionName());
-        printf("%llu %llu", offset, sec->getSize());
+        printf("%llu %llu\n", offset, sec->getSize());
 
-        Disassemble(offset, sec->getSize());
+        DisassembleAll(offset, sec->getSize());
 }
 
+/*Disassemble a function given by name*/
 void FileReader::Disassemble(char *functionName)
 {
         uint64_t fileOffset, nextOffset, codeSize;
         const uint8_t *code;
 
+        /*get the function offset*/
         if (functionNamesMap.find(functionName) != functionNamesMap.end()) {
                 fileOffset = functionNamesMap[functionName];
-                printf("functionn %s found at %llx\n", functionName, fileOffset);
         }
         else {
                 printf("function %s not found\n", functionName);
                 return;
         }
 
-        nextOffset = getNextSymbolOffset(fileOffset);
+        /*get the next function offset and compute size*/
+        nextOffset = getNextOffset(fileOffset);
         codeSize = nextOffset - fileOffset;
-        printf("code size = %llx\n", codeSize);
+        Disassemble(fileOffset, codeSize);
 
+}
+
+/*Disassemble the function in which the fileOffset param falls*/
+void FileReader::Disassemble(uint64_t fileOffset)
+{
+        uint64_t begin, end;
+
+        if (!getFunctionBoundaries(fileOffset, &begin, &end)) {
+                printf("invalid offset %llx\n", fileOffset);
+                return;
+        }
+        Disassemble(begin, end - begin);
+
+}
+
+/*helper function*/
+/*Disassemble the code from fileOffset through fileOffset + codeSize*/
+void FileReader::Disassemble(uint64_t fileOffset, uint64_t codeSize)
+{
+        const uint8_t *code, *initialCode;
+
+        /*read the raw data*/
         code = new uint8_t[codeSize];
+        initialCode = code;
         fseek(file, fileOffset, SEEK_SET);
         FileUtils::readBytes(file, (char *) code, codeSize);
 
+        /*based on the binary type call corresponding helper function*/
         if (capstoneArchOption == CS_ARCH_X86) {
-                Disassemblex86(&code, codeSize, fileOffset);
+                printf("%s\n", functionStartsMap[fileOffset]);
+                Disassemblex86(&code, codeSize, fileOffset, false);
                 return;
         }
 
@@ -135,52 +149,47 @@ void FileReader::Disassemble(char *functionName)
                 capstoneModeOption = getCapstoneMode(fileOffset);
                 cs_option(capstoneHandle, CS_OPT_MODE, capstoneModeOption);
                 if (capstoneModeOption == CS_MODE_THUMB)
-                        printf ("thumb ----\n");
+                        printf("%s\n", functionStartsMap[fileOffset + 1]);
                 else
-                        printf("arm ---------\n");
+                        printf("%s\n", functionStartsMap[fileOffset]);
 
                 DisassembleARM(&code, codeSize, fileOffset);
         }
 
-
+        delete initialCode;
 }
 
-void FileReader::Disassemble(uint64_t fileOffset, uint64_t size)
+/*DisassembleAll the code from fileOffset onwards*/
+void FileReader::DisassembleAll(uint64_t fileOffset, uint64_t size)
 {
 
-        const uint8_t *code;
-        csh handle;
-
-        size_t count, code_size;
+        const uint8_t *code, *initialCode;
         uint64_t nextOffset;
-        uint64_t initialFileOffset = fileOffset;
 
         code = new uint8_t[size];
+        initialCode = code;
         fseek(file, fileOffset, SEEK_SET);
         FileUtils::readBytes(file, (char *) code, size);
 
         if (capstoneArchOption == CS_ARCH_X86) {
-                Disassemblex86(&code, size, fileOffset);
+                Disassemblex86(&code, size, fileOffset, true);
                 return;
         }
 
         if (capstoneArchOption == CS_ARCH_ARM) {
 
                 while(true) {
+                        nextOffset = getNextOffset(fileOffset);
+                        if (nextOffset == 0) {
+                                break;
+                        }
+
                         capstoneModeOption = getCapstoneMode(fileOffset);
                         cs_option(capstoneHandle, CS_OPT_MODE, capstoneModeOption);
                         if (capstoneModeOption == CS_MODE_THUMB)
-                                printf ("thumb ----\n");
+                                printf("%s\n", functionStartsMap[fileOffset + 1]);
                         else
-                                printf("arm ---------\n");
-
-                        nextOffset = getNextSymbolOffset(fileOffset);
-                        if (nextOffset == 0) {
-                                printf ("size = 0x%llx\n", initialFileOffset + size - fileOffset);
-                                DisassembleARM(&code, initialFileOffset + size - fileOffset, fileOffset);
-                                break;
-                        }
-                        printf ("size = 0x%llx\n", nextOffset - fileOffset);
+                                printf("%s\n", functionStartsMap[fileOffset]);
 
                         DisassembleARM(&code, nextOffset - fileOffset, fileOffset);
 
@@ -188,8 +197,12 @@ void FileReader::Disassemble(uint64_t fileOffset, uint64_t size)
                 }
 
         }
+
+        delete initialCode;
 }
 
+/*decides the capstoneMode based on the offset*/
+/*even --> CS_MODE_ARM uneven --> CS_MODE_THUMB*/
 cs_mode FileReader::getCapstoneMode(uint64_t fileOffset)
 {
         if (functionStartsMap.find(fileOffset) != functionStartsMap.end())
@@ -206,28 +219,44 @@ cs_mode FileReader::getCapstoneMode(uint64_t fileOffset)
 
 }
 
-uint64_t FileReader::getNextSymbolOffset(uint64_t currentOffset)
+/*gets the next function offset*/
+uint64_t FileReader::getNextOffset(uint64_t currentOffset)
 {
         uint32_t index;
 
         for (index = 0; index < functionsOffset.size(); index++) {
                 if (functionsOffset[index] == currentOffset) {
-                        if (index < functionsOffset.size() - 1) {
-                                printf("returned offset 0x%llx\n", functionsOffset[index + 1]);
+                        if (index < functionsOffset.size() - 1)
                                 return functionsOffset[index + 1];
-                        }
-                        else {
-                                printf("returned offset 0\n");
+                        else
                                 return 0;
-                        }
                 }
         }
 
-        printf("returned offset 0 2\n");
         return 0;
 }
+
+/*gets the fuction boundaries for a given offset*/
+bool FileReader::getFunctionBoundaries(uint64_t offset, uint64_t *begin,
+                                uint64_t *end)
+{
+        uint32_t index;
+
+        if (offset < functionsOffset[0])
+                return false;
+
+        for (index = 0; index < functionsOffset.size(); index++) {
+                if (functionsOffset[index] >= offset) {
+                        *begin = functionsOffset[index - 1];
+                        *end = functionsOffset[index];
+                        return true;
+                }
+        }
+
+        return false;
+}
 void FileReader::Disassemblex86(const uint8_t **code, uint64_t size,
-                        uint64_t startAddress)
+                        uint64_t startAddress, bool print)
 {
         cs_insn *insn;
         size_t codeSize;
@@ -237,9 +266,15 @@ void FileReader::Disassemblex86(const uint8_t **code, uint64_t size,
         address = startAddress;
 
         insn = cs_malloc(capstoneHandle);
-
+        if (functionStartsMap.find(address) != functionStartsMap.end() && print) {
+                printf("%s\n", functionStartsMap[address]);
+        }
         while (cs_disasm_iter(capstoneHandle, code, &codeSize, &address, insn)) {
                 printf("0x%"PRIx64":\t%s\t\t%s\n", insn[0].address, insn[0].mnemonic, insn[0].op_str);
+
+                if (functionStartsMap.find(address) != functionStartsMap.end() && print) {
+                        printf("%s\n", functionStartsMap[address]);
+                }
         }
 
         cs_free(insn, 1);
@@ -262,15 +297,16 @@ void FileReader::DisassembleARM(const uint8_t **code, uint64_t size,
                         printf("0x%"PRIx64":\t%s\t\t%s\n", insn[0].address, insn[0].mnemonic, insn[0].op_str);
                 }
 
+                /*error probably define instructions --> skip to the end*/
                 if (codeSize > 0) {
-                        printf("fuck this shit 0x%llx\n", address);
+                        printf("skipping from 0x%llx %lu\n bytes", address, codeSize);
                         address = startAddress + size;
                         *code = initialCode + size;
                         codeSize = 0;
                 }
                 else
                         break;
-                }
+        }
 
         cs_free(insn, 1);
 }
@@ -278,4 +314,5 @@ void FileReader::DisassembleARM(const uint8_t **code, uint64_t size,
 FileReader::~FileReader()
 {
         cs_close(&capstoneHandle);
+        fclose(file);
 }

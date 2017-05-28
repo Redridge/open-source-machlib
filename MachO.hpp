@@ -36,6 +36,9 @@
 
 #define LC_FUNCTION_STARTS      0x26
 
+
+#define NAMEPREFIX              "func_"
+
 /*high level class*/
 /*entry point of the library*/
 class MachO
