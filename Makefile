@@ -1,7 +1,7 @@
 build: machlib
 
-machlib: MachHeader.o FileUtils.o  Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o StringTable.o SymbolTableEntry.o SymbolTableEntry32.o SymbolTableEntry64.o SimpleLoadCommands.o LibraryInfo.o main.o
-		g++  MachHeader.o FileUtils.o Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o StringTable.o SymbolTableEntry.o SymbolTableEntry32.o SymbolTableEntry64.o  main.o SimpleLoadCommands.o LibraryInfo.o -o machlib
+machlib: MachHeader.o FileUtils.o  Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o StringTable.o SymbolTableEntry.o SymbolTableEntry32.o SymbolTableEntry64.o SimpleLoadCommands.o LibraryInfo.o FileReader.o main.o
+		g++  MachHeader.o FileUtils.o Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o StringTable.o SymbolTableEntry.o SymbolTableEntry32.o SymbolTableEntry64.o  main.o SimpleLoadCommands.o LibraryInfo.o FileReader.o -lcapstone -o machlib
 MachHeader.o:	MachHeader.cpp
 		g++ -c MachHeader.cpp
 
@@ -48,6 +48,9 @@ SimpleLoadCommands.o : SimpleLoadCommands.cpp
 LibraryInfo.o : LibraryInfo.cpp
 	g++ -c LibraryInfo.cpp
 
+FileReader.o : FileReader.cpp
+	g++ -c FileReader.cpp
+
 MachO.o : MachO.cpp
 	g++ -c MachO.cpp
 
@@ -56,4 +59,4 @@ main.o: main.cpp
 
 clean:
 	rm MachHeader.o FileUtils.o main.o Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o StringTable.o SymbolTableEntry.o SymbolTableEntry32.o SymbolTableEntry64.o machlib
-	rm SimpleLoadCommands.o LibraryInfo.o
+	rm SimpleLoadCommands.o LibraryInfo.o FileReader.o

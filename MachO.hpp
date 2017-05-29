@@ -2,7 +2,9 @@
 #define __MACHO_HPP
 
 #include <vector>
+#include <map>
 #include <stdio.h>
+#include <strings.h>
 #include "FileUtils.hpp"
 #include "MachHeader.hpp"
 #include "Section.hpp"
@@ -32,11 +34,17 @@
 
 #define LC_LOAD_DYLIB           0x0C
 
+#define LC_FUNCTION_STARTS      0x26
+
+
+#define NAMEPREFIX              "func_"
+
 /*high level class*/
 /*entry point of the library*/
 class MachO
 {
 private:
+        char *fileName;
         FILE *file;
         MachHeader header;
         std::vector<Segment *> segments;
@@ -50,6 +58,7 @@ private:
 
         /*entries in the symbol table*/
         std::vector<SymbolTableEntry *> symbolTable;
+        std::map<uint64_t, char *> symbolsFileOffset;
 
         /*dinmaic linker load command*/
         LoadDyLinkerCmd *loadDyLinkerCmd;
@@ -64,18 +73,35 @@ private:
         /*Dynamicly linked shared libraries*/
         std::vector<LibraryInfo *> dynamicLibraries;
 
+        /*information about where to find the table that includes
+        the start of the functions*/
+        FunctionStartsCmd functionStartsCmd;
+
+        std::map<uint64_t, char *> functionsOffset;
+        bool functionsOffsetComputed;
+
+        void computeSymbolsFileOffset();
+        char *getFunctionName(uint64_t functionFileOffset);
+
 public:
         MachO(char  *fileName);
+
+        char *getFileName();
+
 
         MachHeader getHeader();
 
         std::vector<Segment *> getSegments();
+
+        Segment *getSegmentByName(char *name);
+        Section *getSectionByIndex(uint32_t index);
 
         SymbolTableHeader getSymbolTableHeader();
 
         StringTable *getStringTable();
 
         std::vector<SymbolTableEntry *> getSymbolTable();
+        uint64_t getSymbolFileOffset(SymbolTableEntry *symbol);
 
         LoadDyLinkerCmd *getLoadDyLinkerCmd();
 
@@ -85,6 +111,10 @@ public:
 
         std::vector<LibraryInfo *> getDynamicLibrariesInfo();
         std::vector<char *> listDynamicLibraries();
+
+        FunctionStartsCmd getFunctionStartsCmd();
+
+        std::map<uint64_t, char *> getFunctionsOffset();
 
         ~MachO();
 };
