@@ -1,4 +1,5 @@
 #include "MachO.hpp"
+#include "pugixml.hpp"
 
 MachO::MachO(char *fileName)
 {
@@ -261,10 +262,8 @@ uint64_t MachO::getSymbolFileOffset(SymbolTableEntry *symbol)
                 section = getSectionByIndex(symbol->getSectionIndex());
                 segment = getSegmentByName(section->getSegmentName());
 
-                uint64_t sectionVirtualAddress = segment->getVirtualAddress() +
-                                        section->getOffset();
-                uint64_t sectionFileOffset = segment->getFileOffset() +
-                                        section->getOffset();
+                uint64_t sectionVirtualAddress = section->getVirtualAddress();
+                uint64_t sectionFileOffset = section->getOffset();
 
                 sectionOffset = symbol->getValue() - sectionVirtualAddress;
                 symbolFileoffset = sectionFileOffset + sectionOffset;
@@ -285,6 +284,129 @@ char *MachO::getFunctionName(uint64_t functionFileOffset)
         return symbolsFileOffset.at(functionFileOffset);
 }
 
+std::vector<std::map<char *, char *, myKextComp> > MachO::dumpKexts()
+{
+        printf("dumping\n");
+        Segment *seg;
+        Section *sec;
+        uint64_t fileOffset;
+
+        seg = getSegmentByName((char *)"__PRELINK_INFO");
+        printf("got segment %s\n", seg->getName());
+        sec = seg->getSections()[0];
+        printf("got sections %s with size %llu\n", sec->getSectionName(), sec->getSize());
+
+        fileOffset = sec->getOffset();
+        printf("fileoffset = %llu\n", fileOffset);
+
+        char * raw = new char[sec->getSize()];
+
+        fseek(file, fileOffset, SEEK_SET);
+        FileUtils::readBytes(file, raw, sec->getSize());
+
+        printf("%s\n", raw);
+
+        pugi::xml_document doc;
+        pugi::xml_parse_result result = doc.load_buffer(raw, sec->getSize());
+        std::map<uint64_t, char *> integers;
+        std::map<uint64_t, char *> strings;
+        char *key;
+        char *value;
+        if (result) {
+                printf("parse without errors\n");
+                pugi::xml_node dict = doc.first_child();
+                pugi::xml_node array = dict.child("array");
+                printf("%s\n", dict.name());
+                printf("%s\n", array.name());
+                pugi::xml_node dict2 = array.first_child();
+                printf("%s\n", dict2.name());
+
+                for(pugi::xml_node dictionary = array.first_child(); dictionary; dictionary = dictionary.next_sibling()) {
+                        std::map<char *, char *, myKextComp> kext;
+                        for (pugi::xml_node node = dictionary.first_child(); node; node = node.next_sibling()) {
+                                printf("%s -- ", node.child_value());
+                                key = strdup(node.child_value());
+                                node = node.next_sibling();
+
+                                if (strcmp(node.name(), "string") == 0) {
+                                        //printf("got a string\n");
+                                        if (strlen(node.attribute("ID").value()) != 0) {
+
+                                                uint64_t id = node.attribute("ID").as_int();
+                                                //printf("got id = %llu\n", id);
+                                                char * value = strdup(node.child_value());
+                                                strings[id] = value;
+                                                printf("%s\n", value);
+                                                kext[key] = value;
+                                                continue;
+                                        }
+
+                                        if (strlen(node.attribute("IDREF").value()) != 0) {
+
+                                                uint64_t id = node.attribute("IDREF").as_int();
+                                                printf("%s\n", strings[id]);
+                                                kext[key] = strdup(strings[id]);
+                                                continue;
+                                        }
+                                        char * value = strdup(node.child_value());
+                                        printf("%s\n", value);
+                                        kext[key] = value;
+                                        continue;
+                                }
+
+                                if (strcmp(node.name(), "integer") == 0) {
+                                        //printf("got an integer\n");
+                                        if (strlen(node.attribute("ID").value()) != 0) {
+
+                                                uint64_t id = node.attribute("ID").as_int();
+                                                printf("got id = %llu\n", id);
+                                                char * value = strdup(node.child_value());
+                                                integers[id] = value;
+                                                printf("%s\n", value);
+                                                kext[key] = value;
+                                                continue;
+                                        }
+
+                                        if (strlen(node.attribute("IDREF").value()) != 0) {
+
+                                                uint64_t id = node.attribute("IDREF").as_int();
+                                                //printf(" %d %s\n", id, integers[id]);
+                                                if (integers[id] == NULL) {
+                                                        //printf("id %d not found\n", id);
+                                                        value = strdup("1234");
+                                                }
+                                                else {
+                                                        value = strdup(integers[id]);
+                                                }
+                                                printf("%s\n", value);
+                                                kext[key] = value;
+                                                continue;
+                                        }
+                                        char * value = strdup(node.child_value());
+                                        printf("%s\n", value);
+                                        kext[key] = value;
+                                        continue;
+                                }
+                                /*if ( strlen(node.child_value()) != 0) {
+                                        printf("%s\n", node.child_value());
+                                        char * value = strdup(node.child_value());
+                                        kext[key] = value;
+                                }*/
+                                /*else {
+                                        printf("%s\n", node.name());
+                                        char * value = strdup(node.name());
+                                        kext[key] = value;
+                                }*/
+                                delete key;
+                        }
+                        kextsInfo.push_back(kext);
+                }
+        return kextsInfo;
+        }
+        else {
+                printf("some error stuff from pugi xml\n");
+        }
+}
 
 char *MachO::getFileName()
 {
@@ -310,6 +432,18 @@ MachO::~MachO()
 
         for(index = 0; index < dynamicLibraries.size(); index++)
                 delete dynamicLibraries[index];
+
+        for (index = 0; index < kextsInfo.size(); index++) {
+                std::map<char *, char *, myKextComp> map = kextsInfo[index];
+                std::map<char *, char *, myKextComp>::iterator it;
+                for (it = map.begin(); it != map.end(); ++it) {
+                        //printf("deleting some stuff %s\n", it->second);
+                        //printf("deleting some stuff %s\n", it->first);
+                        delete(it->first);
+                        delete(it->second);
+                        //printf("bla\n");
+                }
+        }
 
         fclose(file);
 }

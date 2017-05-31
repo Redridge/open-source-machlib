@@ -23,7 +23,7 @@ void print_section(Section *section)
         printf("Segment name: %s\nSection name %s\n",
         section->getSegmentName(), section->getSectionName());
 
-        printf("virtual address: %lld\nsize: %lld\n",
+        printf("virtual address: %llu\nsize: %llu\n",
         section->getVirtualAddress(), section->getSize());
 
         printf("offset: %d\nnumber of relocations: %d\nalign: %d\n" ,
@@ -196,6 +196,15 @@ mainCmd.getStackSize());
         }
         if(option == 11) {
                 fileReader.Disassemble(7030);
+        }
+
+        if(option == 12) {
+                std::vector<std::map<char *, char *, myKextComp> > map = bin.dumpKexts();
+                for (int i = 0; i < map.size(); i++) {
+                        printf("%s\n", map[i]["CFBundleName"]);
+                        printf("%s\n", map[i]["CFBundleIdentifier"]);
+                }
+                printf("got %d\n", map.size() );
         }
 
         return 0;

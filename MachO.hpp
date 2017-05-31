@@ -5,6 +5,7 @@
 #include <map>
 #include <stdio.h>
 #include <strings.h>
+#include <stdlib.h>
 #include "FileUtils.hpp"
 #include "MachHeader.hpp"
 #include "Section.hpp"
@@ -38,6 +39,12 @@
 
 
 #define NAMEPREFIX              "func_"
+
+struct myKextComp {
+         bool operator()(char *a, char *b) const {
+                 return std::strcmp(a, b) < 0;
+         }
+};
 
 /*high level class*/
 /*entry point of the library*/
@@ -80,6 +87,8 @@ private:
         std::map<uint64_t, char *> functionsOffset;
         bool functionsOffsetComputed;
 
+        std::vector<std::map<char *, char *, myKextComp> > kextsInfo;
+
         void computeSymbolsFileOffset();
         char *getFunctionName(uint64_t functionFileOffset);
 
@@ -115,6 +124,9 @@ public:
         FunctionStartsCmd getFunctionStartsCmd();
 
         std::map<uint64_t, char *> getFunctionsOffset();
+
+        std::vector<std::map<char *, char *, myKextComp> > dumpKexts();
+        //void dumpKexts()        ;
 
         ~MachO();
 };
