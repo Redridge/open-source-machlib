@@ -61,6 +61,7 @@ MachO::MachO(char *fileName)
         stringTableComputed = false;
         symbolTableComputed = false;
         functionsOffsetComputed = false;
+        kextsInfoComputed = false;
 
 
 }
@@ -284,14 +285,21 @@ char *MachO::getFunctionName(uint64_t functionFileOffset)
         return symbolsFileOffset.at(functionFileOffset);
 }
 
-std::vector<std::map<char *, char *, myKextComp> > MachO::dumpKexts()
+std::vector<std::map<char *, char *, myKextComp> > MachO::getKextsInfo()
 {
         printf("dumping\n");
         Segment *seg;
         Section *sec;
         uint64_t fileOffset;
 
+        if (kextsInfoComputed)
+                return kextsInfo;
+
         seg = getSegmentByName((char *)"__PRELINK_INFO");
+        if (seg == NULL) {
+                printf("no __PRELINK_INFO segment\n");
+                return kextsInfo;
+        }
         printf("got segment %s\n", seg->getName());
         sec = seg->getSections()[0];
         printf("got sections %s with size %llu\n", sec->getSectionName(), sec->getSize());
@@ -304,8 +312,6 @@ std::vector<std::map<char *, char *, myKextComp> > MachO::dumpKexts()
         fseek(file, fileOffset, SEEK_SET);
         FileUtils::readBytes(file, raw, sec->getSize());
 
-        printf("%s\n", raw);
-
         pugi::xml_document doc;
         pugi::xml_parse_result result = doc.load_buffer(raw, sec->getSize());
         std::map<uint64_t, char *> integers;
@@ -316,10 +322,6 @@ std::vector<std::map<char *, char *, myKextComp> > MachO::dumpKexts()
                 printf("parse without errors\n");
                 pugi::xml_node dict = doc.first_child();
                 pugi::xml_node array = dict.child("array");
-                printf("%s\n", dict.name());
-                printf("%s\n", array.name());
-                pugi::xml_node dict2 = array.first_child();
-                printf("%s\n", dict2.name());
 
                 for(pugi::xml_node dictionary = array.first_child(); dictionary; dictionary = dictionary.next_sibling()) {
                         std::map<char *, char *, myKextComp> kext;
@@ -327,85 +329,106 @@ std::vector<std::map<char *, char *, myKextComp> > MachO::dumpKexts()
                                 printf("%s -- ", node.child_value());
                                 key = strdup(node.child_value());
                                 node = node.next_sibling();
+                                value = NULL;
 
                                 if (strcmp(node.name(), "string") == 0) {
-                                        //printf("got a string\n");
                                         if (strlen(node.attribute("ID").value()) != 0) {
-
                                                 uint64_t id = node.attribute("ID").as_int();
-                                                //printf("got id = %llu\n", id);
-                                                char * value = strdup(node.child_value());
+                                                value = strdup(node.child_value());
                                                 strings[id] = value;
-                                                printf("%s\n", value);
-                                                kext[key] = value;
-                                                continue;
                                         }
 
                                         if (strlen(node.attribute("IDREF").value()) != 0) {
 
                                                 uint64_t id = node.attribute("IDREF").as_int();
-                                                printf("%s\n", strings[id]);
-                                                kext[key] = strdup(strings[id]);
-                                                continue;
+                                                value = strdup(strings[id]);
                                         }
-                                        char * value = strdup(node.child_value());
+                                        if (value == NULL)
+                                                value = strdup(node.child_value());
                                         printf("%s\n", value);
                                         kext[key] = value;
                                         continue;
                                 }
 
                                 if (strcmp(node.name(), "integer") == 0) {
-                                        //printf("got an integer\n");
                                         if (strlen(node.attribute("ID").value()) != 0) {
-
                                                 uint64_t id = node.attribute("ID").as_int();
-                                                printf("got id = %llu\n", id);
-                                                char * value = strdup(node.child_value());
+                                                value = strdup(node.child_value());
                                                 integers[id] = value;
-                                                printf("%s\n", value);
-                                                kext[key] = value;
-                                                continue;
                                         }
 
                                         if (strlen(node.attribute("IDREF").value()) != 0) {
 
                                                 uint64_t id = node.attribute("IDREF").as_int();
-                                                //printf(" %d %s\n", id, integers[id]);
                                                 if (integers[id] == NULL) {
-                                                        //printf("id %d not found\n", id);
                                                         value = strdup("1234");
                                                 }
                                                 else {
                                                         value = strdup(integers[id]);
                                                 }
-                                                printf("%s\n", value);
-                                                kext[key] = value;
-                                                continue;
                                         }
-                                        char * value = strdup(node.child_value());
+                                        if (value == NULL)
+                                                value = strdup(node.child_value());
                                         printf("%s\n", value);
                                         kext[key] = value;
                                         continue;
                                 }
-                                /*if ( strlen(node.child_value()) != 0) {
-                                        printf("%s\n", node.child_value());
-                                        char * value = strdup(node.child_value());
+
+                                if (strcmp (node.name(), "true") == 0 || strcmp(node.name(), "false") == 0) {
+                                        value = strdup(node.name());
+                                        printf("%s\n", value);
                                         kext[key] = value;
-                                }*/
-                                /*else {
-                                        printf("%s\n", node.name());
-                                        char * value = strdup(node.name());
-                                        kext[key] = value;
-                                }*/
+                                        continue;
+                                }
                                 delete key;
                         }
                         kextsInfo.push_back(kext);
                 }
-        return kextsInfo;
+                delete[] raw;
+                kextsInfoComputed = true;
+                return kextsInfo;
         }
         else {
-                printf("some error stuff from pugi xml\n");
+                printf("error parsing the kexts information\n");
+                return kextsInfo;
         }
+}
+
+std::vector<std::map<char *, char *, myKextComp> > MachO::getKextByProperty(char *key,
+                                                char *value)
+{
+        uint32_t index;
+        std::vector<std::map<char *, char *, myKextComp> > result;
+
+        if (!kextsInfoComputed) {
+                getKextsInfo();
+        }
+
+        for (index = 0; index < kextsInfo.size(); index++) {
+                if (kextsInfo[index].find(key) != kextsInfo[index].end()) {
+                        if (strcmp(kextsInfo[index][key], value) == 0) {
+                                result.push_back(kextsInfo[index]);
+                        }
+                }
+        }
+
+        return result;
+}
+
+std::map<char *, char *, myKextComp> MachO::getKextByBundleId(char * bundleId)
+{
+        std::vector<std::map<char *, char *, myKextComp> > array;
+        std::map<char *, char *, myKextComp> result;
+
+        array = getKextByProperty((char *)"CFBundleIdentifier", bundleId);
+        if (array.size() > 0) {
+                result = array[0];
+        }
+        else {
+                printf("invalid id\n");
+        }
+
+        return result;
 }
 
 char *MachO::getFileName()
@@ -414,6 +437,8 @@ char *MachO::getFileName()
 }
 MachO::~MachO()
 {
+        printf("destructor\n");
+        fflush(stdout);
         int index;
 
         for(index = 0; index < segments.size(); index++){
@@ -433,15 +458,17 @@ MachO::~MachO()
         for(index = 0; index < dynamicLibraries.size(); index++)
                 delete dynamicLibraries[index];
 
-        for (index = 0; index < kextsInfo.size(); index++) {
-                std::map<char *, char *, myKextComp> map = kextsInfo[index];
-                std::map<char *, char *, myKextComp>::iterator it;
-                for (it = map.begin(); it != map.end(); ++it) {
-                        //printf("deleting some stuff %s\n", it->second);
-                        //printf("deleting some stuff %s\n", it->first);
-                        delete(it->first);
-                        delete(it->second);
-                        //printf("bla\n");
+        if (kextsInfoComputed) {
+                printf("freeing kext\n");
+                fflush(stdout);
+                for (index = 0; index < kextsInfo.size(); index++) {
+                        std::map<char *, char *, myKextComp> map = kextsInfo[index];
+                        std::map<char *, char *, myKextComp>::iterator it;
+                        for (it = map.begin(); it != map.end(); ++it) {
+                                printf("deleing.. %s\n", it->first);
+                                delete(it->first);
+                                delete(it->second);
+                        }
                 }
         }
 

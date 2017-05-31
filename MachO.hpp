@@ -88,6 +88,7 @@ private:
         bool functionsOffsetComputed;
 
         std::vector<std::map<char *, char *, myKextComp> > kextsInfo;
+        bool kextsInfoComputed;
 
         void computeSymbolsFileOffset();
         char *getFunctionName(uint64_t functionFileOffset);
@@ -125,9 +126,11 @@ public:
 
         std::map<uint64_t, char *> getFunctionsOffset();
 
-        std::vector<std::map<char *, char *, myKextComp> > dumpKexts();
-        //void dumpKexts()        ;
+        std::vector<std::map<char *, char *, myKextComp> > getKextsInfo();
 
+        std::vector<std::map<char *, char *, myKextComp> > getKextByProperty(char * key, char * value);
+
+        std::map<char *, char *, myKextComp> getKextByBundleId(char * bundleId);
         ~MachO();
 };
 

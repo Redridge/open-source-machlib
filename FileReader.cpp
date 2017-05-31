@@ -313,6 +313,10 @@ void FileReader::DisassembleARM(const uint8_t **code, uint64_t size,
 
 FileReader::~FileReader()
 {
+        printf("file reader destructor\n");
+        fflush(stdout);
         cs_close(&capstoneHandle);
         fclose(file);
+        printf("out file reader destructor\n");
+        fflush(stdout);
 }

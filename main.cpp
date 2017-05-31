@@ -85,6 +85,13 @@ void print_symbol(SymbolTableEntry *entry)
 
         printf("value: 0x%llx\n", entry->getValue());
 }
+void print_kext (std::map<char *, char *, myKextComp> map) {
+        std::map<char *, char *, myKextComp>::iterator it;
+
+        for (it = map.begin(); it != map.end(); ++it) {
+                printf("%s -- %s\n", it->first, it->second);
+        }
+}
 
 void print_lib(LibraryInfo * lib)
 {
@@ -192,20 +199,34 @@ mainCmd.getStackSize());
         }
 
         if(option == 10) {
-                fileReader.Disassemble("_main");
+                fileReader.Disassemble((char *)"_main");
         }
         if(option == 11) {
                 fileReader.Disassemble(7030);
         }
 
         if(option == 12) {
-                std::vector<std::map<char *, char *, myKextComp> > map = bin.dumpKexts();
+                std::vector<std::map<char *, char *, myKextComp> > map = bin.getKextsInfo();
+                std::map<char *, char *, myKextComp>::iterator it;
                 for (int i = 0; i < map.size(); i++) {
-                        printf("%s\n", map[i]["CFBundleName"]);
-                        printf("%s\n", map[i]["CFBundleIdentifier"]);
+                        /*printf("%s\n", map[i][(char *)"CFBundleName"]);
+                        printf("%s\n", map[i][(char *)"CFBundleIdentifier"]);*/
+                        //print_kext(map[i]);
+
+
+                        for (it = map[i].begin(); it != map[i].end(); ++it) {
+                                printf("%s -- %s\n", it->first, it->second);
+                        }
                 }
-                printf("got %d\n", map.size() );
+                printf("got %lu kernel extensions\n", map.size() );
         }
 
+        if(option == 13) {
+                std::map<char *, char *, myKextComp> map2;
+                map2 = bin.getKextByBundleId((char *)"com.apple.kpi.mach");
+                //printf("%s\n", map2[(char *)"CFBundleName"]);
+                //printf("%s\n", map2[(char *)"CFBundleIdentifier"]);
+        }
+        printf("dstuff\n");
         return 0;
 }
