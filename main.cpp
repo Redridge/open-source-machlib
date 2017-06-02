@@ -85,14 +85,6 @@ void print_symbol(SymbolTableEntry *entry)
 
         printf("value: 0x%llx\n", entry->getValue());
 }
-void print_kext (std::map<char *, char *, myKextComp> map) {
-        std::map<char *, char *, myKextComp>::iterator it;
-
-        for (it = map.begin(); it != map.end(); ++it) {
-                printf("%s -- %s\n", it->first, it->second);
-        }
-}
-
 void print_lib(LibraryInfo * lib)
 {
         printf("version:%u\n name: %s\n", lib->getCurrentVersion(), lib->getName());
@@ -191,17 +183,17 @@ mainCmd.getStackSize());
                 /*for(int i = 0; i < starts.size(); i++)
                         printf("0x%llx\n", starts[i]);*/
         }
-
-        FileReader fileReader(&bin);
         if(option == 9) {
-
+                FileReader fileReader(&bin);
                 fileReader.Disassemble();
         }
 
         if(option == 10) {
+                FileReader fileReader(&bin);
                 fileReader.Disassemble((char *)"_main");
         }
         if(option == 11) {
+                FileReader fileReader(&bin);
                 fileReader.Disassemble(7030);
         }
 
@@ -209,11 +201,7 @@ mainCmd.getStackSize());
                 std::vector<std::map<char *, char *, myKextComp> > map = bin.getKextsInfo();
                 std::map<char *, char *, myKextComp>::iterator it;
                 for (int i = 0; i < map.size(); i++) {
-                        /*printf("%s\n", map[i][(char *)"CFBundleName"]);
-                        printf("%s\n", map[i][(char *)"CFBundleIdentifier"]);*/
-                        //print_kext(map[i]);
-
-
+                        printf("kext %d\n", i);
                         for (it = map[i].begin(); it != map[i].end(); ++it) {
                                 printf("%s -- %s\n", it->first, it->second);
                         }
@@ -224,8 +212,23 @@ mainCmd.getStackSize());
         if(option == 13) {
                 std::map<char *, char *, myKextComp> map2;
                 map2 = bin.getKextByBundleId((char *)"com.apple.kpi.mach");
-                //printf("%s\n", map2[(char *)"CFBundleName"]);
-                //printf("%s\n", map2[(char *)"CFBundleIdentifier"]);
+                std::map<char *, char *, myKextComp>::iterator it;
+                for (it = map2.begin(); it != map2.end(); ++it) {
+                        printf("%s --- %s\n", it->first, it->second);
+                }
+        }
+
+        if(option == 14) {
+                FileReader fileReader(&bin);
+                uint64_t size;
+                char * raw = fileReader.dumpSection((char *)"__TEXT", (char *)"__cstring", &size);
+                for (uint64_t i = 0; i < size; i++)
+                        printf("%c", raw[i]);
+                delete raw;
+        }
+
+        if (option == 15) {
+                bin.dumpKext((char *)"com.apple.iokit.IOTimeSyncFamily", (char *) "kpi");
         }
         printf("dstuff\n");
         return 0;

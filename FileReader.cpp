@@ -20,17 +20,19 @@ FileReader::FileReader(MachO *binary)
         uint64_t offset;
 
         this->binary = binary;
-        /*get the map with the starts offset of each function*/
-        functionStartsMap = binary->getFunctionsOffset();
-        file = fopen(this->binary->getFileName(), "rb");
+
 
         /*decide on capstone mode and arch  based on the mach header*/
         MachHeader header = this->binary->getHeader();
         if (capstoneArch.find(header.getCpuType()) == capstoneArch.end()) {
                 //TODO throw exception when cpu not supported;
                 printf("cpu type not supported\n");
-                return;
+                throw std::invalid_argument("cpu type not supported");
         }
+
+        /*get the map with the starts offset of each function*/
+        functionStartsMap = binary->getFunctionsOffset();
+        file = fopen(this->binary->getFileName(), "rb");
 
         capstoneArchOption = capstoneArch[header.getCpuType()];
         capstoneModeOption = CS_MODE_THUMB;
@@ -311,12 +313,31 @@ void FileReader::DisassembleARM(const uint8_t **code, uint64_t size,
         cs_free(insn, 1);
 }
 
+char * FileReader::dumpSection(char *segmentName, char *sectionName, uint64_t *size)
+{
+        Section *sec;
+        char *raw;
+
+        sec = this->binary->getSectionByName(segmentName, sectionName);
+
+        if (sec == NULL) {
+                printf("404 not found\n");
+                return NULL;
+        }
+
+        raw = new char[sec->getSize()];
+        fseek(this->file, sec->getOffset(), SEEK_SET);
+        FileUtils::readBytes(this->file, raw, sec->getSize());
+        *size = sec->getSize();
+
+        return raw;
+}
 FileReader::~FileReader()
 {
-        printf("file reader destructor\n");
+        //printf("file reader destructor\n");
         fflush(stdout);
         cs_close(&capstoneHandle);
         fclose(file);
-        printf("out file reader destructor\n");
+        //printf("out file reader destructor\n");
         fflush(stdout);
 }

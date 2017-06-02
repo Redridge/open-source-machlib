@@ -89,6 +89,8 @@ private:
 
         std::vector<std::map<char *, char *, myKextComp> > kextsInfo;
         bool kextsInfoComputed;
+        std::map<char *, MachHeader> kextsHeader;
+        bool kextsHeaderComputed;
 
         void computeSymbolsFileOffset();
         char *getFunctionName(uint64_t functionFileOffset);
@@ -105,6 +107,7 @@ public:
 
         Segment *getSegmentByName(char *name);
         Section *getSectionByIndex(uint32_t index);
+        Section *getSectionByName(char * segmentName, char *sectionName);
 
         SymbolTableHeader getSymbolTableHeader();
 
@@ -131,6 +134,10 @@ public:
         std::vector<std::map<char *, char *, myKextComp> > getKextByProperty(char * key, char * value);
 
         std::map<char *, char *, myKextComp> getKextByBundleId(char * bundleId);
+
+        uint64_t getVirtToFile(uint64_t virtualAddress);
+
+        void dumpKext(char * bundleId, char *fileName);
         ~MachO();
 };
 

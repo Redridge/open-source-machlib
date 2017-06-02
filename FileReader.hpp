@@ -4,6 +4,7 @@
 #include <capstone/capstone.h>
 #include "MachO.hpp"
 #include <inttypes.h>
+#include <stdexcept>
 
 #define CPU_ARCH_ABI64                  0x1000000
 
@@ -63,6 +64,7 @@ public:
         void Disassemble();
         void Disassemble(char *functionName);
         void Disassemble(uint64_t fileOffset);
+        char * dumpSection(char * segmentName, char *sectionName, uint64_t *size);
 
         ~FileReader();
 };

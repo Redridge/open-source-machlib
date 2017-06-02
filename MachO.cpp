@@ -108,7 +108,27 @@ Segment *MachO::getSegmentByName(char * name)
         printf("invalid segment name %s\n", name);
         return NULL;
 }
+Section *MachO::getSectionByName(char *segmentName, char *sectionName) {
 
+        uint32_t index;
+        Segment *seg;
+        std::vector<Section *> sections;
+
+        seg = getSegmentByName(segmentName);
+        if (seg == NULL) {
+                printf("invalid segment name\n");
+                return NULL;
+        }
+
+        sections = seg->getSections();
+        for (index = 0; index < sections.size(); index++) {
+                if (strcmp(sectionName, sections[index]->getSectionName()) == 0) {
+                        return sections[index];
+                }
+        }
+
+        return NULL;
+}
 SymbolTableHeader MachO::getSymbolTableHeader()
 {
         return symbolTableHeader;
@@ -309,8 +329,10 @@ std::vector<std::map<char *, char *, myKextComp> > MachO::getKextsInfo()
 
         char * raw = new char[sec->getSize()];
 
+
         fseek(file, fileOffset, SEEK_SET);
         FileUtils::readBytes(file, raw, sec->getSize());
+        //      printf("%s\n", raw);
 
         pugi::xml_document doc;
         pugi::xml_parse_result result = doc.load_buffer(raw, sec->getSize());
@@ -326,11 +348,10 @@ std::vector<std::map<char *, char *, myKextComp> > MachO::getKextsInfo()
                 for(pugi::xml_node dictionary = array.first_child(); dictionary; dictionary = dictionary.next_sibling()) {
                         std::map<char *, char *, myKextComp> kext;
                         for (pugi::xml_node node = dictionary.first_child(); node; node = node.next_sibling()) {
-                                printf("%s -- ", node.child_value());
+                                //printf("%s -- ", node.child_value());
                                 key = strdup(node.child_value());
                                 node = node.next_sibling();
                                 value = NULL;
-
                                 if (strcmp(node.name(), "string") == 0) {
                                         if (strlen(node.attribute("ID").value()) != 0) {
                                                 uint64_t id = node.attribute("ID").as_int();
@@ -345,7 +366,7 @@ std::vector<std::map<char *, char *, myKextComp> > MachO::getKextsInfo()
                                         }
                                         if (value == NULL)
                                                 value = strdup(node.child_value());
-                                        printf("%s\n", value);
+                                        //printf("string %s\n", value);
                                         kext[key] = value;
                                         continue;
                                 }
@@ -369,17 +390,25 @@ std::vector<std::map<char *, char *, myKextComp> > MachO::getKextsInfo()
                                         }
                                         if (value == NULL)
                                                 value = strdup(node.child_value());
-                                        printf("%s\n", value);
+                                        //printf(" integer %s\n", value);
+                                        kext[key] = value;
+                                        continue;
+                                }
+
+                                if (strcmp(node.name(), "data") == 0) {
+                                        value = strdup(node.child_value());
+                                        //printf("%s\n", value);
                                         kext[key] = value;
                                         continue;
                                 }
 
                                 if (strcmp (node.name(), "true") == 0 || strcmp(node.name(), "false") == 0) {
                                         value = strdup(node.name());
-                                        printf("%s\n", value);
+                                        //printf(" bool %s\n", value);
                                         kext[key] = value;
                                         continue;
                                 }
+                                //printf("value not found\n");
                                 delete key;
                         }
                         kextsInfo.push_back(kext);
@@ -431,13 +460,79 @@ std::map<char *, char *, myKextComp> MachO::getKextByBundleId(char * bundleId)
         return result;
 }
 
+uint64_t MachO::getVirtToFile(uint64_t virtualAddress)
+{
+        uint32_t index;
+        Segment *seg = NULL;
+        uint64_t segmentOffset;
+
+        for (index = 1; index < segments.size(); index++) {
+                if (virtualAddress >= segments[index]->getVirtualAddress() &&
+                virtualAddress <= segments[index]->getVirtualAddress() + segments[index]->getVirtualSize()) {
+                        seg = segments[index];
+                        break;
+                }
+        }
+
+        if (seg == NULL) {
+                printf("invalid address\n");
+                return 0;
+        }
+
+        printf("segment name %s\n", seg->getName());
+        segmentOffset = virtualAddress -  seg->getVirtualAddress();
+        return seg->getFileOffset() + segmentOffset;
+}
+void MachO::dumpKext(char *bundleId, char *fileName)
+{
+        uint32_t index;
+        uint64_t virtualAddress, fileOffset, size;
+        std::map<char *, char *, myKextComp> extension;
+        FILE *destination;
+        char * raw;
+
+        if (! kextsInfoComputed) {
+                getKextsInfo();
+        }
+
+        for (index = 0; index < kextsInfo.size(); index++) {
+                if (strcmp(kextsInfo[index][(char *) "CFBundleIdentifier"], bundleId) == 0) {
+                        extension = kextsInfo[index];
+                        if (extension.find((char *)"_PrelinkExecutableLoadAddr") == extension.end()) {
+                                printf("kernel extension not loaded\n");
+                                return;
+                        }
+                        virtualAddress = strtoul(extension[(char *) "_PrelinkExecutableLoadAddr"], NULL, 16);
+                        fileOffset = getVirtToFile(virtualAddress);
+                        size = strtoul(extension[(char *)"_PrelinkExecutableSize"], NULL, 16);
+                        //printf("got size = %llx\n", size);
+
+                        raw = new char[size];
+                        fseek(file, fileOffset, SEEK_SET);
+                        FileUtils::readBytes(file, raw, size);
+
+                        destination = fopen(fileName, "wb");
+                        if (destination == NULL) {
+                                printf("can not create the file\n");
+                                return;
+                        }
+
+                        fwrite(raw, size, 1, destination);
+                        delete raw;
+                        return;
+                }
+        }
+
+        printf("extension not found\n");
+        return;
+}
 char *MachO::getFileName()
 {
         return fileName;
 }
 MachO::~MachO()
 {
-        printf("destructor\n");
+        //printf("destructor\n");
         fflush(stdout);
         int index;
 
@@ -459,13 +554,12 @@ MachO::~MachO()
                 delete dynamicLibraries[index];
 
         if (kextsInfoComputed) {
-                printf("freeing kext\n");
+                //printf("freeing kext\n");
                 fflush(stdout);
                 for (index = 0; index < kextsInfo.size(); index++) {
                         std::map<char *, char *, myKextComp> map = kextsInfo[index];
                         std::map<char *, char *, myKextComp>::iterator it;
                         for (it = map.begin(); it != map.end(); ++it) {
-                                printf("deleing.. %s\n", it->first);
                                 delete(it->first);
                                 delete(it->second);
                         }
