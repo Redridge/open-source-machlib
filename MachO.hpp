@@ -5,6 +5,7 @@
 #include <map>
 #include <stdio.h>
 #include <strings.h>
+#include <stdlib.h>
 #include "FileUtils.hpp"
 #include "MachHeader.hpp"
 #include "Section.hpp"
@@ -38,6 +39,12 @@
 
 
 #define NAMEPREFIX              "func_"
+
+struct myKextComp {
+         bool operator()(char *a, char *b) const {
+                 return std::strcmp(a, b) < 0;
+         }
+};
 
 /*high level class*/
 /*entry point of the library*/
@@ -80,6 +87,11 @@ private:
         std::map<uint64_t, char *> functionsOffset;
         bool functionsOffsetComputed;
 
+        std::vector<std::map<char *, char *, myKextComp> > kextsInfo;
+        bool kextsInfoComputed;
+        std::map<char *, MachHeader> kextsHeader;
+        bool kextsHeaderComputed;
+
         void computeSymbolsFileOffset();
         char *getFunctionName(uint64_t functionFileOffset);
 
@@ -95,6 +107,7 @@ public:
 
         Segment *getSegmentByName(char *name);
         Section *getSectionByIndex(uint32_t index);
+        Section *getSectionByName(char * segmentName, char *sectionName);
 
         SymbolTableHeader getSymbolTableHeader();
 
@@ -116,6 +129,15 @@ public:
 
         std::map<uint64_t, char *> getFunctionsOffset();
 
+        std::vector<std::map<char *, char *, myKextComp> > getKextsInfo();
+
+        std::vector<std::map<char *, char *, myKextComp> > getKextByProperty(char * key, char * value);
+
+        std::map<char *, char *, myKextComp> getKextByBundleId(char * bundleId);
+
+        uint64_t getVirtToFile(uint64_t virtualAddress);
+
+        void dumpKext(char * bundleId, char *fileName);
         ~MachO();
 };
 

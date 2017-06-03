@@ -20,17 +20,19 @@ FileReader::FileReader(MachO *binary)
         uint64_t offset;
 
         this->binary = binary;
-        /*get the map with the starts offset of each function*/
-        functionStartsMap = binary->getFunctionsOffset();
-        file = fopen(this->binary->getFileName(), "rb");
+
 
         /*decide on capstone mode and arch  based on the mach header*/
         MachHeader header = this->binary->getHeader();
         if (capstoneArch.find(header.getCpuType()) == capstoneArch.end()) {
                 //TODO throw exception when cpu not supported;
                 printf("cpu type not supported\n");
-                return;
+                throw std::invalid_argument("cpu type not supported");
         }
+
+        /*get the map with the starts offset of each function*/
+        functionStartsMap = binary->getFunctionsOffset();
+        file = fopen(this->binary->getFileName(), "rb");
 
         capstoneArchOption = capstoneArch[header.getCpuType()];
         capstoneModeOption = CS_MODE_THUMB;
@@ -47,28 +49,33 @@ FileReader::FileReader(MachO *binary)
                 printf("error opening capstone\n");
                 //TODO throw exception
 
+        /*insert in the functions offset the end of the __text section*/
+        sec = binary->getSectionByIndex(1);
+        seg = binary->getSegmentByName(sec->getSegmentName());
+        offset = sec->getOffset() + sec->getSize();
+        functionsOffset.push_back(offset);
+
         std::map<uint64_t, char *>::iterator it;
 
         /*extract only the functions offsets*/
         /*computes the name offset map*/
         for (it = functionStartsMap.begin(); it != functionStartsMap.end(); ++it) {
                 if (it->first % 2) {
-                        functionsOffset.push_back(it->first - 1);
-                        functionNamesMap[it->second] = it->first - 1;
+                        if (it->first - 1 < offset) {
+                                functionsOffset.push_back(it->first - 1);
+                                functionNamesMap[it->second] = it->first - 1;
+                        }
                 }
                 else {
-                        functionsOffset.push_back(it->first);
-                        functionNamesMap[it->second] = it->first;
+                        if (it->first < offset) {
+                                functionsOffset.push_back(it->first);
+                                functionNamesMap[it->second] = it->first;
+                        }
                 }
 
 
         }
 
-        /*insert in the functions offset the end of the __text section*/
-        sec = binary->getSectionByIndex(1);
-        seg = binary->getSegmentByName(sec->getSegmentName());
-        offset = seg->getFileOffset() + sec->getOffset() + sec->getSize();
-        functionsOffset.push_back(offset);
         std::sort(functionsOffset.begin(), functionsOffset.end());
 
 }
@@ -214,6 +221,7 @@ cs_mode FileReader::getCapstoneMode(uint64_t fileOffset)
         //TODO throw exception
 
         printf("something went wrong %llx\n", fileOffset);
+        return CS_MODE_THUMB;
 
 
 
@@ -291,6 +299,7 @@ void FileReader::DisassembleARM(const uint8_t **code, uint64_t size,
         codeSize = size;
         address = startAddress;
 
+        printf("code %lu\n", codeSize);
         insn = cs_malloc(capstoneHandle);
         while(true) {
                 while (cs_disasm_iter(capstoneHandle, code, &codeSize, &address, insn)) {
@@ -303,6 +312,7 @@ void FileReader::DisassembleARM(const uint8_t **code, uint64_t size,
                         address = startAddress + size;
                         *code = initialCode + size;
                         codeSize = 0;
+                        break;
                 }
                 else
                         break;
@@ -311,8 +321,28 @@ void FileReader::DisassembleARM(const uint8_t **code, uint64_t size,
         cs_free(insn, 1);
 }
 
+char * FileReader::dumpSection(char *segmentName, char *sectionName, uint64_t *size)
+{
+        Section *sec;
+        char *raw;
+
+        sec = this->binary->getSectionByName(segmentName, sectionName);
+
+        if (sec == NULL) {
+                printf("404 not found\n");
+                return NULL;
+        }
+
+        raw = new char[sec->getSize()];
+        fseek(this->file, sec->getOffset(), SEEK_SET);
+        FileUtils::readBytes(this->file, raw, sec->getSize());
+        *size = sec->getSize();
+
+        return raw;
+}
 FileReader::~FileReader()
 {
         cs_close(&capstoneHandle);
         fclose(file);
+        fflush(stdout);
 }

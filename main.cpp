@@ -23,10 +23,10 @@ void print_section(Section *section)
         printf("Segment name: %s\nSection name %s\n",
         section->getSegmentName(), section->getSectionName());
 
-        printf("virtual address: %lld\nsize: %lld\n",
+        printf("virtual address: %llu\nsize: %llu\n",
         section->getVirtualAddress(), section->getSize());
 
-        printf("offset: %d\nnumber of relocations: %d\nalign: %d\n" ,
+        printf("offset: %llx\nnumber of relocations: %d\nalign: %d\n" ,
         section->getOffset(), section->getNumberRelocations(), section->getAlign());
 
         printf("relocation offset: %d\nflags: %u\n",
@@ -43,7 +43,7 @@ void print_segment(Segment *segment)
         printf("virtual address: %lld\nvirtual size: %lld\n",
                 segment->getVirtualAddress(), segment->getVirtualSize());
 
-        printf("file offset: %lld\nfile size: %lld\n",
+        printf("file offset: %llx\nfile size: %lld\n",
                 segment->getFileOffset(), segment->getFileSize() );
 
         printf("init prot: 0x%x\nmax prot: %x\n",
@@ -85,7 +85,6 @@ void print_symbol(SymbolTableEntry *entry)
 
         printf("value: 0x%llx\n", entry->getValue());
 }
-
 void print_lib(LibraryInfo * lib)
 {
         printf("version:%u\n name: %s\n", lib->getCurrentVersion(), lib->getName());
@@ -184,19 +183,53 @@ mainCmd.getStackSize());
                 /*for(int i = 0; i < starts.size(); i++)
                         printf("0x%llx\n", starts[i]);*/
         }
-
-        FileReader fileReader(&bin);
         if(option == 9) {
-
+                FileReader fileReader(&bin);
                 fileReader.Disassemble();
         }
 
         if(option == 10) {
-                fileReader.Disassemble("_main");
+                FileReader fileReader(&bin);
+                fileReader.Disassemble((char *)"_main");
         }
         if(option == 11) {
+                FileReader fileReader(&bin);
                 fileReader.Disassemble(7030);
         }
 
+        if(option == 12) {
+                std::vector<std::map<char *, char *, myKextComp> > map = bin.getKextsInfo();
+                std::map<char *, char *, myKextComp>::iterator it;
+                for (int i = 0; i < map.size(); i++) {
+                        printf("kext %d\n", i);
+                        for (it = map[i].begin(); it != map[i].end(); ++it) {
+                                printf("%s -- %s\n", it->first, it->second);
+                        }
+                }
+                printf("got %lu kernel extensions\n", map.size() );
+        }
+
+        if(option == 13) {
+                std::map<char *, char *, myKextComp> map2;
+                map2 = bin.getKextByBundleId((char *)"com.apple.kpi.mach");
+                std::map<char *, char *, myKextComp>::iterator it;
+                for (it = map2.begin(); it != map2.end(); ++it) {
+                        printf("%s --- %s\n", it->first, it->second);
+                }
+        }
+
+        if(option == 14) {
+                FileReader fileReader(&bin);
+                uint64_t size;
+                char * raw = fileReader.dumpSection((char *)"__TEXT", (char *)"__cstring", &size);
+                for (uint64_t i = 0; i < size; i++)
+                        printf("%c", raw[i]);
+                delete raw;
+        }
+
+        if (option == 15) {
+                bin.dumpKext((char *)"com.apple.iokit.IOTimeSyncFamily", (char *) "kpi");
+        }
+        printf("dstuff\n");
         return 0;
 }
