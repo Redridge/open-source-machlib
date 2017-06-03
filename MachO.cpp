@@ -332,7 +332,6 @@ std::vector<std::map<char *, char *, myKextComp> > MachO::getKextsInfo()
 
         fseek(file, fileOffset, SEEK_SET);
         FileUtils::readBytes(file, raw, sec->getSize());
-        //      printf("%s\n", raw);
 
         pugi::xml_document doc;
         pugi::xml_parse_result result = doc.load_buffer(raw, sec->getSize());
@@ -348,7 +347,6 @@ std::vector<std::map<char *, char *, myKextComp> > MachO::getKextsInfo()
                 for(pugi::xml_node dictionary = array.first_child(); dictionary; dictionary = dictionary.next_sibling()) {
                         std::map<char *, char *, myKextComp> kext;
                         for (pugi::xml_node node = dictionary.first_child(); node; node = node.next_sibling()) {
-                                //printf("%s -- ", node.child_value());
                                 key = strdup(node.child_value());
                                 node = node.next_sibling();
                                 value = NULL;
@@ -366,7 +364,6 @@ std::vector<std::map<char *, char *, myKextComp> > MachO::getKextsInfo()
                                         }
                                         if (value == NULL)
                                                 value = strdup(node.child_value());
-                                        //printf("string %s\n", value);
                                         kext[key] = value;
                                         continue;
                                 }
@@ -390,25 +387,21 @@ std::vector<std::map<char *, char *, myKextComp> > MachO::getKextsInfo()
                                         }
                                         if (value == NULL)
                                                 value = strdup(node.child_value());
-                                        //printf(" integer %s\n", value);
                                         kext[key] = value;
                                         continue;
                                 }
 
                                 if (strcmp(node.name(), "data") == 0) {
                                         value = strdup(node.child_value());
-                                        //printf("%s\n", value);
                                         kext[key] = value;
                                         continue;
                                 }
 
                                 if (strcmp (node.name(), "true") == 0 || strcmp(node.name(), "false") == 0) {
                                         value = strdup(node.name());
-                                        //printf(" bool %s\n", value);
                                         kext[key] = value;
                                         continue;
                                 }
-                                //printf("value not found\n");
                                 delete key;
                         }
                         kextsInfo.push_back(kext);
@@ -554,8 +547,6 @@ MachO::~MachO()
                 delete dynamicLibraries[index];
 
         if (kextsInfoComputed) {
-                //printf("freeing kext\n");
-                fflush(stdout);
                 for (index = 0; index < kextsInfo.size(); index++) {
                         std::map<char *, char *, myKextComp> map = kextsInfo[index];
                         std::map<char *, char *, myKextComp>::iterator it;

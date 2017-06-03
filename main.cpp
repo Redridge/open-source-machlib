@@ -26,7 +26,7 @@ void print_section(Section *section)
         printf("virtual address: %llu\nsize: %llu\n",
         section->getVirtualAddress(), section->getSize());
 
-        printf("offset: %d\nnumber of relocations: %d\nalign: %d\n" ,
+        printf("offset: %llx\nnumber of relocations: %d\nalign: %d\n" ,
         section->getOffset(), section->getNumberRelocations(), section->getAlign());
 
         printf("relocation offset: %d\nflags: %u\n",
@@ -43,7 +43,7 @@ void print_segment(Segment *segment)
         printf("virtual address: %lld\nvirtual size: %lld\n",
                 segment->getVirtualAddress(), segment->getVirtualSize());
 
-        printf("file offset: %lld\nfile size: %lld\n",
+        printf("file offset: %llx\nfile size: %lld\n",
                 segment->getFileOffset(), segment->getFileSize() );
 
         printf("init prot: 0x%x\nmax prot: %x\n",

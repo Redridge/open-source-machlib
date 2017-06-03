@@ -49,28 +49,33 @@ FileReader::FileReader(MachO *binary)
                 printf("error opening capstone\n");
                 //TODO throw exception
 
+        /*insert in the functions offset the end of the __text section*/
+        sec = binary->getSectionByIndex(1);
+        seg = binary->getSegmentByName(sec->getSegmentName());
+        offset = sec->getOffset() + sec->getSize();
+        functionsOffset.push_back(offset);
+
         std::map<uint64_t, char *>::iterator it;
 
         /*extract only the functions offsets*/
         /*computes the name offset map*/
         for (it = functionStartsMap.begin(); it != functionStartsMap.end(); ++it) {
                 if (it->first % 2) {
-                        functionsOffset.push_back(it->first - 1);
-                        functionNamesMap[it->second] = it->first - 1;
+                        if (it->first - 1 < offset) {
+                                functionsOffset.push_back(it->first - 1);
+                                functionNamesMap[it->second] = it->first - 1;
+                        }
                 }
                 else {
-                        functionsOffset.push_back(it->first);
-                        functionNamesMap[it->second] = it->first;
+                        if (it->first < offset) {
+                                functionsOffset.push_back(it->first);
+                                functionNamesMap[it->second] = it->first;
+                        }
                 }
 
 
         }
 
-        /*insert in the functions offset the end of the __text section*/
-        sec = binary->getSectionByIndex(1);
-        seg = binary->getSegmentByName(sec->getSegmentName());
-        offset = seg->getFileOffset() + sec->getOffset() + sec->getSize();
-        functionsOffset.push_back(offset);
         std::sort(functionsOffset.begin(), functionsOffset.end());
 
 }
@@ -216,6 +221,7 @@ cs_mode FileReader::getCapstoneMode(uint64_t fileOffset)
         //TODO throw exception
 
         printf("something went wrong %llx\n", fileOffset);
+        return CS_MODE_THUMB;
 
 
 
@@ -293,6 +299,7 @@ void FileReader::DisassembleARM(const uint8_t **code, uint64_t size,
         codeSize = size;
         address = startAddress;
 
+        printf("code %lu\n", codeSize);
         insn = cs_malloc(capstoneHandle);
         while(true) {
                 while (cs_disasm_iter(capstoneHandle, code, &codeSize, &address, insn)) {
@@ -305,6 +312,7 @@ void FileReader::DisassembleARM(const uint8_t **code, uint64_t size,
                         address = startAddress + size;
                         *code = initialCode + size;
                         codeSize = 0;
+                        break;
                 }
                 else
                         break;
@@ -334,10 +342,7 @@ char * FileReader::dumpSection(char *segmentName, char *sectionName, uint64_t *s
 }
 FileReader::~FileReader()
 {
-        //printf("file reader destructor\n");
-        fflush(stdout);
         cs_close(&capstoneHandle);
         fclose(file);
-        //printf("out file reader destructor\n");
         fflush(stdout);
 }
