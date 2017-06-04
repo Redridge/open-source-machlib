@@ -50,6 +50,10 @@ MachO::MachO(char *fileName)
                                 functionStartsCmd = FunctionStartsCmd(file);
                                 break;
 
+                        case LC_DYSYMTAB:
+                                dynamicSymbolTableHeader = DynamicSymbolTableHeader(file);
+                                break;
+
                         /*parsing not yet implemented - -skip*/
                         default:
                                 FileUtils::readUint32(file, &size);
@@ -62,6 +66,7 @@ MachO::MachO(char *fileName)
         symbolTableComputed = false;
         functionsOffsetComputed = false;
         kextsInfoComputed = false;
+        DynamicSymbolTableComputed = false;
 
 
 }
@@ -519,6 +524,79 @@ void MachO::dumpKext(char *bundleId, char *fileName)
         printf("extension not found\n");
         return;
 }
+
+std::vector<DynamicSymbolTableEntry *> MachO::getDynamicSymbolTable()
+{
+        uint32_t index, value, sectionIndex, symIndex, stubSize;
+        uint32_t noSymbols, entrySize;
+        uint64_t offset;
+        std::vector<uint32_t> indexes;
+        std::vector<Section *> sections;
+        Section *section;
+
+        if (DynamicSymbolTableComputed) {
+                return dynamicSymbolTable;
+        }
+
+        if (!symbolTableComputed) {
+                getSymbolTable();
+        }
+
+        fseek(file, dynamicSymbolTableHeader.getTableOffset(), SEEK_SET);
+
+        for(index = 0; index < dynamicSymbolTableHeader.getNumberEntries(); index++) {
+                FileUtils::readUint32(file, &value);
+                indexes.push_back(value);
+        }
+
+        for (index = 0; index < segments.size(); index++) {
+                sections = segments[index]->getSections();
+                for (sectionIndex = 0; sectionIndex < sections.size(); sectionIndex++) {
+
+                        if (sections[sectionIndex]->getType() == S_SYMBOL_STUBS) {
+                                section = sections[sectionIndex];
+                                //printf("stubs %s\n", sections[sectionIndex]->getSectionName());
+                                offset = section->getOffset();
+                                symIndex = section->getReserved1();
+                                stubSize = section->getReserved2();
+                                noSymbols = section->getSize() / stubSize;
+                                for (int  i = symIndex; i < symIndex + noSymbols; i++, offset = offset + stubSize) {
+                                        char * name = symbolTable[indexes[i]]->getName();
+                                        dynamicSymbolTable.push_back(new DynamicSymbolTableEntry(indexes[i], offset, name, section));
+                                }
+                        }
+
+                        if (sections[sectionIndex]->getType() == S_NON_LAZY_SYMBOL_POINTER ||
+                                sections[sectionIndex]->getType() == S_LAZY_SYMBOL_POINTERS) {
+                                section = sections[sectionIndex];
+                                //printf(" non or lazy %s\n", sections[sectionIndex]->getSectionName());
+                                offset = section->getOffset();
+                                symIndex = section->getReserved1();
+                                entrySize = header.getIs32() ? 4 : 8;
+                                noSymbols = section->getSize() / entrySize;
+                                for (int  i = symIndex; i < symIndex + noSymbols; i++, offset = offset + entrySize) {
+                                        char *name = NULL;
+                                        if (indexes[i] == INDIRECT_SYMBOL_ABS )
+                                                name = (char *)"ABSOLUTE";
+
+                                        if (indexes[i] == INDIRECT_SYMBOL_LOCAL)
+                                                name = (char *)"LOCAL";
+
+                                        if (indexes[i] == (INDIRECT_SYMBOL_ABS | INDIRECT_SYMBOL_LOCAL) )
+                                                name = (char *)"ABSOLUTE AND LOCAL";
+
+                                        if (name == NULL)
+                                                name = symbolTable[indexes[i]]->getName();
+
+                                        dynamicSymbolTable.push_back(new DynamicSymbolTableEntry(indexes[i], offset, name, section));
+                                }
+                        }
+                }
+        }
+        DynamicSymbolTableComputed = true;
+        return dynamicSymbolTable;
+}
+
 char *MachO::getFileName()
 {
         return fileName;
@@ -555,6 +633,11 @@ MachO::~MachO()
                                 delete(it->second);
                         }
                 }
+        }
+
+        if (DynamicSymbolTableComputed) {
+                for (index = 0; index < dynamicSymbolTable.size(); index++)
+                        delete dynamicSymbolTable[index];
         }
 
         fclose(file);

@@ -230,6 +230,21 @@ mainCmd.getStackSize());
         if (option == 15) {
                 bin.dumpKext((char *)"com.apple.iokit.IOTimeSyncFamily", (char *) "kpi");
         }
+
+        if (option == 16) {
+                /*DynamicSymbolTableHeader header = bin.getDynamicSymbolTable();
+                printf(" offset %u entries %u \n", header.getTableOffset(), header.getNumberEntries());*/
+
+                std::vector<DynamicSymbolTableEntry *> index = bin.getDynamicSymbolTable();
+                for (int  i = 0; i < index.size(); i++) {
+                        /*printf("%s %s\n", index[i]->getSection()->getSectionName(),
+                                        index[i]->getSection()->getSegmentName());*/
+                        printf("%u---", index[i]->getIndex());
+                        printf("%llx --- ", index[i]->getIndirectAdress() );
+                        printf("%s\n", index[i]->getName());
+                }
+
+        }
         printf("dstuff\n");
         return 0;
 }
