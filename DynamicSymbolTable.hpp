@@ -17,6 +17,7 @@
 #define INDIRECT_SYMBOL_ABS	0x40000000
 
 
+/*most of the fields are for now unused*/
 class DynamicSymbolTableHeader {
 private:
         /* index to local symbols */
@@ -105,6 +106,8 @@ public:
 
 };
 
+/*an indirect symbol is represented by its index in the symbol table*/
+/*it's indirect address name and the section in which is defined*/
 class DynamicSymbolTableEntry
 {
 private:

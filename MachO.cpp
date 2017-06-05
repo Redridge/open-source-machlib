@@ -543,20 +543,20 @@ std::vector<DynamicSymbolTableEntry *> MachO::getDynamicSymbolTable()
         }
 
         fseek(file, dynamicSymbolTableHeader.getTableOffset(), SEEK_SET);
-
+        /*read the indexes*/
         for(index = 0; index < dynamicSymbolTableHeader.getNumberEntries(); index++) {
                 FileUtils::readUint32(file, &value);
                 indexes.push_back(value);
         }
 
+        /*search for the stub, lazy, non lazy pointer section*/
         for (index = 0; index < segments.size(); index++) {
                 sections = segments[index]->getSections();
                 for (sectionIndex = 0; sectionIndex < sections.size(); sectionIndex++) {
-
+                        /*symbol stub*/
                         if (sections[sectionIndex]->getType() == S_SYMBOL_STUBS) {
                                 section = sections[sectionIndex];
-                                //printf("stubs %s\n", sections[sectionIndex]->getSectionName());
-                                offset = section->getOffset();
+                                offset = section->getVirtualAddress();
                                 symIndex = section->getReserved1();
                                 stubSize = section->getReserved2();
                                 noSymbols = section->getSize() / stubSize;
@@ -565,12 +565,11 @@ std::vector<DynamicSymbolTableEntry *> MachO::getDynamicSymbolTable()
                                         dynamicSymbolTable.push_back(new DynamicSymbolTableEntry(indexes[i], offset, name, section));
                                 }
                         }
-
+                        /*lazy and non lazy pointers*/
                         if (sections[sectionIndex]->getType() == S_NON_LAZY_SYMBOL_POINTER ||
                                 sections[sectionIndex]->getType() == S_LAZY_SYMBOL_POINTERS) {
                                 section = sections[sectionIndex];
-                                //printf(" non or lazy %s\n", sections[sectionIndex]->getSectionName());
-                                offset = section->getOffset();
+                                offset = section->getVirtualAddress();
                                 symIndex = section->getReserved1();
                                 entrySize = header.getIs32() ? 4 : 8;
                                 noSymbols = section->getSize() / entrySize;
