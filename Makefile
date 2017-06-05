@@ -1,7 +1,7 @@
 build: machlib
 
-machlib: MachHeader.o FileUtils.o  Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o StringTable.o SymbolTableEntry.o SymbolTableEntry32.o SymbolTableEntry64.o SimpleLoadCommands.o LibraryInfo.o FileReader.o main.o pugixml.o
-		g++  MachHeader.o FileUtils.o Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o StringTable.o SymbolTableEntry.o SymbolTableEntry32.o SymbolTableEntry64.o  main.o SimpleLoadCommands.o LibraryInfo.o FileReader.o pugixml.o -lcapstone -o machlib
+machlib: MachHeader.o FileUtils.o  Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o StringTable.o SymbolTableEntry.o SymbolTableEntry32.o SymbolTableEntry64.o SimpleLoadCommands.o LibraryInfo.o FileReader.o main.o pugixml.o DynamicSymbolTable.o
+		g++  MachHeader.o FileUtils.o Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o StringTable.o SymbolTableEntry.o SymbolTableEntry32.o SymbolTableEntry64.o  main.o SimpleLoadCommands.o LibraryInfo.o FileReader.o pugixml.o DynamicSymbolTable.o -lcapstone -o machlib
 MachHeader.o:	MachHeader.cpp
 		g++ -c MachHeader.cpp
 
@@ -57,9 +57,13 @@ MachO.o : MachO.cpp
 pugixml.o : pugixml.cpp
 	g++ -c pugixml.cpp
 
+DynamicSymbolTable.o : DynamicSymbolTable.cpp
+	g++ -c DynamicSymbolTable.cpp
+
 main.o: main.cpp
 	g++ -c main.cpp
 
 clean:
 	rm MachHeader.o FileUtils.o main.o Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o StringTable.o SymbolTableEntry.o SymbolTableEntry32.o SymbolTableEntry64.o machlib
 	rm SimpleLoadCommands.o LibraryInfo.o FileReader.o pugixml.o
+	rm DynamicSymbolTable.o

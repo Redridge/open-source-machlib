@@ -46,6 +46,10 @@ uint32_t Section::getReserved2()
         return reserved2;
 }
 
+uint32_t Section::getType()
+{
+        return (flags & SECTION_TYPE);
+}
 Section::~Section()
 {
 }

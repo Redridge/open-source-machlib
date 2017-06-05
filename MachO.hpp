@@ -21,6 +21,8 @@
 #include "SymbolTableEntry64.hpp"
 #include "SimpleLoadCommands.hpp"
 #include "LibraryInfo.hpp"
+#include "DynamicSymbolTable.hpp"
+
 
 #define LC_SEGMENT32            0x01
 #define LC_SEGMENT64            0x19
@@ -36,6 +38,8 @@
 #define LC_LOAD_DYLIB           0x0C
 
 #define LC_FUNCTION_STARTS      0x26
+
+#define LC_DYSYMTAB             0x0B
 
 
 #define NAMEPREFIX              "func_"
@@ -53,9 +57,15 @@ class MachO
 private:
         char *fileName;
         FILE *file;
+
         MachHeader header;
+
         std::vector<Segment *> segments;
+
         SymbolTableHeader symbolTableHeader;
+
+        DynamicSymbolTableHeader dynamicSymbolTableHeader;
+
         /*flags to avoid recomputing*/
         bool stringTableComputed;
         bool symbolTableComputed;
@@ -66,6 +76,11 @@ private:
         /*entries in the symbol table*/
         std::vector<SymbolTableEntry *> symbolTable;
         std::map<uint64_t, char *> symbolsFileOffset;
+
+        /*the dynamic symbol table*/
+        std::vector<DynamicSymbolTableEntry*> dynamicSymbolTable;
+        bool DynamicSymbolTableComputed;
+
 
         /*dinmaic linker load command*/
         LoadDyLinkerCmd *loadDyLinkerCmd;
@@ -115,6 +130,8 @@ public:
 
         std::vector<SymbolTableEntry *> getSymbolTable();
         uint64_t getSymbolFileOffset(SymbolTableEntry *symbol);
+
+        std::vector<DynamicSymbolTableEntry *> getDynamicSymbolTable();
 
         LoadDyLinkerCmd *getLoadDyLinkerCmd();
 
