@@ -5,6 +5,8 @@
 #include "MachO.hpp"
 #include <inttypes.h>
 #include <stdexcept>
+#include <algorithm>
+#include <cstring>
 
 #define CPU_ARCH_ABI64                  0x1000000
 
