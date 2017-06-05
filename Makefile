@@ -1,69 +1,30 @@
-build: machlib
+CC := g++
+SRCDIR := src
+BUILDDIR := build
+TARGET := bin/libopenmach.so
+LIBDIR := bin
 
-machlib: MachHeader.o FileUtils.o  Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o StringTable.o SymbolTableEntry.o SymbolTableEntry32.o SymbolTableEntry64.o SimpleLoadCommands.o LibraryInfo.o FileReader.o main.o pugixml.o DynamicSymbolTable.o
-		g++  MachHeader.o FileUtils.o Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o StringTable.o SymbolTableEntry.o SymbolTableEntry32.o SymbolTableEntry64.o  main.o SimpleLoadCommands.o LibraryInfo.o FileReader.o pugixml.o DynamicSymbolTable.o -lcapstone -o machlib
-MachHeader.o:	MachHeader.cpp
-		g++ -c MachHeader.cpp
+SRCEXT := cpp
+SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
+OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
+CFLAGS := -g -fpic
+LIB := -lcapstone
+INC := -I include
 
-FileUtils.o: FileUtils.cpp
-	g++ -c FileUtils.cpp
+build: $(TARGET) bin/poc
 
-Segment.o : Segment.cpp
-	g++ -c Segment.cpp
+$(TARGET): $(OBJECTS)
+	@mkdir -p $(LIBDIR)
+	@echo " $(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -shared -o $(TARGET) $(LIB)
 
-Segment32.o : Segment32.cpp
-	g++ -c Segment32.cpp
-
-Segment64.o : Segment64.cpp
-	g++ -c Segment64.cpp
-
-Section.o : Section.cpp
-	g++ -c Section.cpp
-
-Section32.o : Section32.cpp
-	g++ -c Section32.cpp
-
-Section64.o : Section64.cpp
-	g++ -c Section64.cpp
-
-SymbolTableHeader.o : SymbolTableHeader.cpp
-	g++ -c SymbolTableHeader.cpp
-
-StringTable.o : StringTable.cpp
-	g++ -c StringTable.cpp
-
-SymbolTableEntry.o : SymbolTableEntry.cpp
-	g++ -c SymbolTableEntry.cpp
-
-SymbolTableEntry32.o : SymbolTableEntry32.cpp
-	g++ -c SymbolTableEntry32.cpp
-
-SymbolTableEntry64.o : SymbolTableEntry64.cpp
-	g++ -c SymbolTableEntry64.cpp
-
-
-SimpleLoadCommands.o : SimpleLoadCommands.cpp
-	g++ -c SimpleLoadCommands.cpp
-
-LibraryInfo.o : LibraryInfo.cpp
-	g++ -c LibraryInfo.cpp
-
-FileReader.o : FileReader.cpp
-	g++ -c FileReader.cpp
-
-MachO.o : MachO.cpp
-	g++ -c MachO.cpp
-
-pugixml.o : pugixml.cpp
-	g++ -c pugixml.cpp
-
-DynamicSymbolTable.o : DynamicSymbolTable.cpp
-	g++ -c DynamicSymbolTable.cpp
-
-main.o: main.cpp
-	g++ -c main.cpp
+$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
+	@mkdir -p $(BUILDDIR)
+	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 clean:
-	rm MachHeader.o FileUtils.o main.o Segment.o Segment32.o Segment64.o Section.o Section32.o Section64.o MachO.o SymbolTableHeader.o StringTable.o SymbolTableEntry.o SymbolTableEntry32.o SymbolTableEntry64.o machlib
-	rm SimpleLoadCommands.o LibraryInfo.o FileReader.o pugixml.o
-	rm DynamicSymbolTable.o
+	@echo " $(RM) -r $(BUILDDIR) $(TARGET) bin/poc"; $(RM) -r $(BUILDDIR) $(TARGET) bin/poc
+
+bin/poc: poc/poc.cpp
+	@echo " $(CC) -L$(LIBDIR) -o $@ $< -lopenmach $(INC)"; $(CC) -L$(LIBDIR) -o $@ $< -lopenmach $(INC)
+
+.PHONY: clean
