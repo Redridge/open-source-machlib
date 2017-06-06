@@ -274,7 +274,7 @@ void FileReader::Disassemblex86(const uint8_t **code, uint64_t size,
                 printf("%s\n", functionStartsMap[address]);
         }
         while (cs_disasm_iter(capstoneHandle, code, &codeSize, &address, insn)) {
-                printf("0x%"PRIx64":\t%s\t\t%s\n", insn[0].address, insn[0].mnemonic, insn[0].op_str);
+                printf("0x%" PRIx64 ":\t%s\t\t%s\n", insn[0].address, insn[0].mnemonic, insn[0].op_str);
 
                 if (functionStartsMap.find(address) != functionStartsMap.end() && print) {
                         printf("%s\n", functionStartsMap[address]);
@@ -299,7 +299,7 @@ void FileReader::DisassembleARM(const uint8_t **code, uint64_t size,
         insn = cs_malloc(capstoneHandle);
         while(true) {
                 while (cs_disasm_iter(capstoneHandle, code, &codeSize, &address, insn)) {
-                        printf("0x%"PRIx64":\t%s\t\t%s\n", insn[0].address, insn[0].mnemonic, insn[0].op_str);
+                        printf("0x%" PRIx64 ":\t%s\t\t%s\n", insn[0].address, insn[0].mnemonic, insn[0].op_str);
                 }
 
                 /*error probably define instructions --> skip to the end*/
