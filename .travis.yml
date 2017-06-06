@@ -1,0 +1,24 @@
+language: cpp
+
+os:
+        - osx
+        - linux
+
+dist:
+        - trusty
+
+compiler:
+        - gcc
+
+addons:
+  apt:
+    sources:
+    packages:
+
+before_install:
+        - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; brew install capstone; export DYLD_LIBRARY_PATH=/usr/local/opt/capstone/lib/:$DYLD_LIBRARY_PATH; fi
+        - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then wget http://cz.archive.ubuntu.com/ubuntu/pool/universe/c/capstone/libcapstone3_3.0.4-0.2_amd64.deb; sudo dpkg -i libcapstone3_3.0.4-0.2_amd64.deb; fi
+        - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then wget http://cz.archive.ubuntu.com/ubuntu/pool/universe/c/capstone/libcapstone-dev_3.0.4-0.2_amd64.deb; sudo dpkg -i libcapstone-dev_3.0.4-0.2_amd64.deb; fi
+
+script:
+        - make
