@@ -161,8 +161,7 @@ uint8_t SymbolTableEntry::getLibraryOrdinal()
         if(isUndefined())
                 return ((description >> 8) & 0xFF);
         else
-                return 0;
-        //TODO throw exception
+                return -1;
 }
 
 bool SymbolTableEntry::isWeakReferenced()

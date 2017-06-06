@@ -6,8 +6,7 @@ MachHeader::MachHeader(FILE *file)
         FileUtils::readUint32(file, &magic);
 
         if(magic != MAGIC_32 && magic != MAGIC_64) {
-                //TODO - throw exception
-                return;
+                throw std::runtime_error("File probably not MachO");
         }
 
         if(magic == MAGIC_32)
@@ -29,7 +28,7 @@ MachHeader::MachHeader(FILE *file)
 
 MachHeader::MachHeader()
 {
-        
+
 }
 
 bool MachHeader::getIs32()

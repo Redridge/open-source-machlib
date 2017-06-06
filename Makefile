@@ -1,4 +1,4 @@
-CC := g++
+CC := g++ -Wall
 SRCDIR := src
 BUILDDIR := build
 TARGET := bin/libopenmach.so

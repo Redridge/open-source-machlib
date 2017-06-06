@@ -11,6 +11,10 @@ MachO::MachO(char *fileName)
         header = MachHeader(file);
 
         loadDyLinkerCmd = NULL;
+        symbolTableHeaderPresent = false;
+        loadMainCmdPresent = false;
+        functionStartsCmdPresent = false;
+
         /*parse load commands*/
         for (index = 0; index < header.getNumberCmds(); index++) {
                 FileUtils::readUint32(file, &command);
@@ -27,6 +31,7 @@ MachO::MachO(char *fileName)
 
                         case LC_SYMTAB:
                                 symbolTableHeader = SymbolTableHeader(file);
+                                symbolTableHeaderPresent = true;
                                 break;
 
                         case LC_LOAD_DYLINKER:
@@ -40,6 +45,7 @@ MachO::MachO(char *fileName)
 
                         case LC_MAIN:
                                 loadMainCmd = LoadMainCmd(file);
+                                loadMainCmdPresent = true;
                                 break;
 
                         case LC_LOAD_DYLIB:
@@ -48,6 +54,7 @@ MachO::MachO(char *fileName)
 
                         case LC_FUNCTION_STARTS:
                                 functionStartsCmd = FunctionStartsCmd(file);
+                                functionStartsCmdPresent = true;
                                 break;
 
                         case LC_DYSYMTAB:
@@ -75,6 +82,7 @@ MachHeader MachO::getHeader()
 {
         return header;
 }
+
 std::vector<Segment *>MachO::getSegments()
 {
         return segments;
@@ -99,7 +107,6 @@ Section *MachO::getSectionByIndex(uint32_t index)
         }
         printf("invalid section index %d\n", index);
         return NULL;
-        //TODO throw exception when index too big;
 }
 
 Segment *MachO::getSegmentByName(char * name)
@@ -113,6 +120,7 @@ Segment *MachO::getSegmentByName(char * name)
         printf("invalid segment name %s\n", name);
         return NULL;
 }
+
 Section *MachO::getSectionByName(char *segmentName, char *sectionName) {
 
         uint32_t index;
@@ -134,13 +142,23 @@ Section *MachO::getSectionByName(char *segmentName, char *sectionName) {
 
         return NULL;
 }
+
 SymbolTableHeader MachO::getSymbolTableHeader()
 {
+        if (!symbolTableHeaderPresent) {
+                throw std::runtime_error("LC_SYMTAB not present");
+        }
+
         return symbolTableHeader;
 }
 
 StringTable *MachO::getStringTable()
 {
+
+        if (!symbolTableHeaderPresent) {
+                throw std::runtime_error("LC_SYMTAB not present");
+        }
+
         if(!stringTableComputed) {
                 stringTable =  new StringTable(file, symbolTableHeader);
                 stringTableComputed = true;
@@ -187,7 +205,10 @@ uint8_t *MachO::getUUID()
 
 LoadMainCmd MachO::getLoadMainCmd()
 {
-        //TODO not all files have main
+        if (!loadMainCmdPresent) {
+                throw std::runtime_error("Main not present");
+        }
+
         return loadMainCmd;
 }
 
@@ -209,6 +230,10 @@ std::vector<char *> MachO::listDynamicLibraries()
 
 FunctionStartsCmd MachO::getFunctionStartsCmd()
 {
+        if (!functionStartsCmdPresent) {
+                throw std::runtime_error("LC_FUNCTION_STARTS not present");
+        }
+
         return functionStartsCmd;
 }
 
@@ -217,6 +242,10 @@ std::map<uint64_t, char *> MachO::getFunctionsOffset()
         uint64_t addr;
         uint8_t *start, *end, *data, *cursor;
         uint32_t size = functionStartsCmd.getDataSize();
+
+        if (!functionStartsCmdPresent) {
+                throw std::runtime_error("LC_FUNCTION_STARTS not present");
+        }
 
         addr = getSegmentByName((char*)"__TEXT")->getFileOffset();
         computeSymbolsFileOffset();
@@ -312,7 +341,6 @@ char *MachO::getFunctionName(uint64_t functionFileOffset)
 
 std::vector<std::map<char *, char *, myKextComp> > MachO::getKextsInfo()
 {
-        printf("dumping\n");
         Segment *seg;
         Section *sec;
         uint64_t fileOffset;
@@ -325,12 +353,10 @@ std::vector<std::map<char *, char *, myKextComp> > MachO::getKextsInfo()
                 printf("no __PRELINK_INFO segment\n");
                 return kextsInfo;
         }
-        printf("got segment %s\n", seg->getName());
+
         sec = seg->getSections()[0];
-        printf("got sections %s with size %llu\n", sec->getSectionName(), sec->getSize());
 
         fileOffset = sec->getOffset();
-        printf("fileoffset = %llu\n", fileOffset);
 
         char * raw = new char[sec->getSize()];
 
@@ -477,10 +503,10 @@ uint64_t MachO::getVirtToFile(uint64_t virtualAddress)
                 return 0;
         }
 
-        printf("segment name %s\n", seg->getName());
         segmentOffset = virtualAddress -  seg->getVirtualAddress();
         return seg->getFileOffset() + segmentOffset;
 }
+
 void MachO::dumpKext(char *bundleId, char *fileName)
 {
         uint32_t index;
@@ -602,8 +628,6 @@ char *MachO::getFileName()
 }
 MachO::~MachO()
 {
-        //printf("destructor\n");
-        fflush(stdout);
         int index;
 
         for(index = 0; index < segments.size(); index++){
@@ -637,6 +661,15 @@ MachO::~MachO()
         if (DynamicSymbolTableComputed) {
                 for (index = 0; index < dynamicSymbolTable.size(); index++)
                         delete dynamicSymbolTable[index];
+        }
+
+        if (!functionsOffset.empty()) {
+                std::map<uint64_t, char *>::iterator it;
+                for (it = functionsOffset.begin(); it != functionsOffset.end(); ++it) {
+                        if (strncmp(NAMEPREFIX, it->second, 4) == 0) {
+                                delete(it->second);
+                        }
+                }
         }
 
         fclose(file);

@@ -64,6 +64,7 @@ private:
         std::vector<Segment *> segments;
 
         SymbolTableHeader symbolTableHeader;
+        bool symbolTableHeaderPresent;
 
         DynamicSymbolTableHeader dynamicSymbolTableHeader;
 
@@ -88,6 +89,7 @@ private:
 
         /*entry point command*/
         LoadMainCmd loadMainCmd;
+        bool loadMainCmdPresent;
 
         /*the uuid is a 128-bit unique random number that*/
         /*identifies an object produced by the static link editor*/
@@ -99,6 +101,7 @@ private:
         /*information about where to find the table that includes
         the start of the functions*/
         FunctionStartsCmd functionStartsCmd;
+        bool functionStartsCmdPresent;
 
         std::map<uint64_t, char *> functionsOffset;
         bool functionsOffsetComputed;
@@ -106,7 +109,6 @@ private:
         std::vector<std::map<char *, char *, myKextComp> > kextsInfo;
         bool kextsInfoComputed;
         std::map<char *, MachHeader> kextsHeader;
-        bool kextsHeaderComputed;
 
         void computeSymbolsFileOffset();
         char *getFunctionName(uint64_t functionFileOffset);

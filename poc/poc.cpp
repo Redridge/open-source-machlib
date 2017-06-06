@@ -26,7 +26,7 @@ void print_section(Section *section)
         printf("virtual address: %llu\nsize: %llu\n",
         section->getVirtualAddress(), section->getSize());
 
-        printf("offset: %llx\nnumber of relocations: %d\nalign: %d\n" ,
+        printf("offset: %x\nnumber of relocations: %d\nalign: %d\n" ,
         section->getOffset(), section->getNumberRelocations(), section->getAlign());
 
         printf("relocation offset: %d\nflags: %u\n",
@@ -94,7 +94,7 @@ void print_lib(LibraryInfo * lib)
 /*listing of segments and sections*/
 int main(int argc, char *argv[])
 {
-        FILE *file;
+
         int option;
 
         if (argc != 3) {
@@ -141,7 +141,8 @@ int main(int argc, char *argv[])
 
         if(option == 6) {
                 LoadDyLinkerCmd *cmd = bin.getLoadDyLinkerCmd();
-                printf(" the linker name is %s\n", cmd->getLinkerName() );
+                if(cmd != NULL)
+                        printf(" the linker name is %s\n", cmd->getLinkerName() );
 
                 uint8_t *uuid = bin.getUUID();
                 printf("the uuid is:\n");
@@ -155,14 +156,10 @@ int main(int argc, char *argv[])
 
         printf("\nthe main command\n");
         printf ("entryOffset: %llu, stacksize: %llu", mainCmd.getEntryOffset(),
-mainCmd.getStackSize());
+                mainCmd.getStackSize());
         }
 
         if(option == 7) {
-        /*std::vector<LibraryInfo *> libs = bin.getDynamicLibrariesInfo();
-        for(int i = 0; i < libs.size(); i++)
-                print_lib(libs[i]);*/
-
                 std::vector<char *> names = bin.listDynamicLibraries();
                 for(int i = 0; i < names.size(); i++)
                         printf("%s\n", names[i]);
@@ -180,9 +177,8 @@ mainCmd.getStackSize());
 
                 for(it = starts.begin(); it != starts.end(); ++it)
                         printf("0x%llx ----- %s\n", it->first, it->second);
-                /*for(int i = 0; i < starts.size(); i++)
-                        printf("0x%llx\n", starts[i]);*/
         }
+
         if(option == 9) {
                 FileReader fileReader(&bin);
                 fileReader.Disassemble();
@@ -192,6 +188,7 @@ mainCmd.getStackSize());
                 FileReader fileReader(&bin);
                 fileReader.Disassemble((char *)"_main");
         }
+
         if(option == 11) {
                 FileReader fileReader(&bin);
                 fileReader.Disassemble(7030);
@@ -232,19 +229,13 @@ mainCmd.getStackSize());
         }
 
         if (option == 16) {
-                /*DynamicSymbolTableHeader header = bin.getDynamicSymbolTable();
-                printf(" offset %u entries %u \n", header.getTableOffset(), header.getNumberEntries());*/
-
                 std::vector<DynamicSymbolTableEntry *> index = bin.getDynamicSymbolTable();
                 for (int  i = 0; i < index.size(); i++) {
-                        /*printf("%s %s\n", index[i]->getSection()->getSectionName(),
-                                        index[i]->getSection()->getSegmentName());*/
                         printf("%u---", index[i]->getIndex());
                         printf("%llx --- ", index[i]->getIndirectAdress() );
                         printf("%s\n", index[i]->getName());
                 }
 
         }
-        printf("dstuff\n");
         return 0;
 }

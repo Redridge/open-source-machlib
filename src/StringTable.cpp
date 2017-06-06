@@ -37,7 +37,7 @@ char *StringTable::get(uint32_t index)
 {
         if(index < table.size())
                 return table[index];
-        //TODO throw exception when index out of bounds
+                
         return NULL;
 }
 

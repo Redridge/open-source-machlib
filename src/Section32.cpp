@@ -39,6 +39,5 @@ uint64_t Section32::getSize()
 
 uint32_t Section32::getReserved3()
 {
-        //TODO throw exception
         return 0;
 }

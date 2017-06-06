@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdexcept>
 
 #define MAGIC_32 0xFEEDFACE
 #define MAGIC_64 0xFEEDFACF

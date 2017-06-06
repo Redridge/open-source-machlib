@@ -25,8 +25,6 @@ FileReader::FileReader(MachO *binary)
         /*decide on capstone mode and arch  based on the mach header*/
         MachHeader header = this->binary->getHeader();
         if (capstoneArch.find(header.getCpuType()) == capstoneArch.end()) {
-                //TODO throw exception when cpu not supported;
-                printf("cpu type not supported\n");
                 throw std::invalid_argument("cpu type not supported");
         }
 
@@ -45,9 +43,9 @@ FileReader::FileReader(MachO *binary)
                         capstoneModeOption = CS_MODE_64;
                 }
 
-        if (cs_open(capstoneArchOption, capstoneModeOption, &capstoneHandle) != CS_ERR_OK)
-                printf("error opening capstone\n");
-                //TODO throw exception
+        if (cs_open(capstoneArchOption, capstoneModeOption, &capstoneHandle) != CS_ERR_OK) {
+                throw std::runtime_error("error opening capstone");
+        }
 
         /*insert in the functions offset the end of the __text section*/
         sec = binary->getSectionByIndex(1);
@@ -72,8 +70,6 @@ FileReader::FileReader(MachO *binary)
                                 functionNamesMap[it->second] = it->first;
                         }
                 }
-
-
         }
 
         std::sort(functionsOffset.begin(), functionsOffset.end());
@@ -102,7 +98,6 @@ void FileReader::Disassemble()
 void FileReader::Disassemble(char *functionName)
 {
         uint64_t fileOffset, nextOffset, codeSize;
-        const uint8_t *code;
 
         /*get the function offset*/
         if (functionNamesMap.find(functionName) != functionNamesMap.end()) {
@@ -263,6 +258,7 @@ bool FileReader::getFunctionBoundaries(uint64_t offset, uint64_t *begin,
 
         return false;
 }
+
 void FileReader::Disassemblex86(const uint8_t **code, uint64_t size,
                         uint64_t startAddress, bool print)
 {
@@ -340,6 +336,7 @@ char * FileReader::dumpSection(char *segmentName, char *sectionName, uint64_t *s
 
         return raw;
 }
+
 FileReader::~FileReader()
 {
         cs_close(&capstoneHandle);
