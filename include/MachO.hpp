@@ -145,7 +145,7 @@ public:
         std::vector<LibraryInfo *> getDynamicLibrariesInfo();
         std::vector<char *> listDynamicLibraries();
 
-        LinkEditCmd getLinkEditCmd();
+        LinkEditCmd getFunctionStartsCmd();
 
         std::map<uint64_t, char *> getFunctionsOffset();
 

@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
                 }
 
         if(option == 8) {
-                LinkEditCmd fcstart = bin.getLinkEditCmd();
+                LinkEditCmd fcstart = bin.getFunctionStartsCmd();
 
                 printf("LinkEditCmd ------------\n");
                 printf("dataOffset: %u\ndataSize: %u\n", fcstart.getDataOffset(),

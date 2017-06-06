@@ -229,7 +229,7 @@ std::vector<char *> MachO::listDynamicLibraries()
         return names;
 }
 
-LinkEditCmd MachO::getLinkEditCmd()
+LinkEditCmd MachO::getFunctionStartsCmd()
 {
         if (!functionStartsCmdPresent) {
                 throw std::runtime_error("LC_FUNCTION_STARTS not present");
