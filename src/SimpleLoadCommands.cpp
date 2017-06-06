@@ -60,13 +60,13 @@ uint64_t LoadMainCmd::getStackSize()
 }
 
 
-FunctionStartsCmd::FunctionStartsCmd()
+LinkEditCmd::LinkEditCmd()
 {
         dataOffset = 0;
         dataSize = 0;
 }
 
-FunctionStartsCmd::FunctionStartsCmd(FILE *file)
+LinkEditCmd::LinkEditCmd(FILE *file)
 {
         uint32_t cmdSize;
 
@@ -77,12 +77,12 @@ FunctionStartsCmd::FunctionStartsCmd(FILE *file)
         FileUtils::readUint32(file, &dataSize);
 }
 
-uint32_t FunctionStartsCmd::getDataOffset()
+uint32_t LinkEditCmd::getDataOffset()
 {
         return dataOffset;
 }
 
-uint32_t FunctionStartsCmd::getDataSize()
+uint32_t LinkEditCmd::getDataSize()
 {
         return dataSize;
 }

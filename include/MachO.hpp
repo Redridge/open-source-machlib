@@ -100,7 +100,7 @@ private:
 
         /*information about where to find the table that includes
         the start of the functions*/
-        FunctionStartsCmd functionStartsCmd;
+        LinkEditCmd functionStartsCmd;
         bool functionStartsCmdPresent;
 
         std::map<uint64_t, char *> functionsOffset;
@@ -145,7 +145,7 @@ public:
         std::vector<LibraryInfo *> getDynamicLibrariesInfo();
         std::vector<char *> listDynamicLibraries();
 
-        FunctionStartsCmd getFunctionStartsCmd();
+        LinkEditCmd getLinkEditCmd();
 
         std::map<uint64_t, char *> getFunctionsOffset();
 

@@ -53,7 +53,7 @@ MachO::MachO(char *fileName)
                                 break;
 
                         case LC_FUNCTION_STARTS:
-                                functionStartsCmd = FunctionStartsCmd(file);
+                                functionStartsCmd = LinkEditCmd(file);
                                 functionStartsCmdPresent = true;
                                 break;
 
@@ -229,7 +229,7 @@ std::vector<char *> MachO::listDynamicLibraries()
         return names;
 }
 
-FunctionStartsCmd MachO::getFunctionStartsCmd()
+LinkEditCmd MachO::getLinkEditCmd()
 {
         if (!functionStartsCmdPresent) {
                 throw std::runtime_error("LC_FUNCTION_STARTS not present");
