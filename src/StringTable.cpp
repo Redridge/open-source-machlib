@@ -2,7 +2,7 @@
 
 StringTable::StringTable(FILE *file, SymbolTableHeader tableHeader)
 {
-        uint32_t tableSize, index, dataIndex;
+        uint32_t tableSize, dataIndex;
 
         fseek(file, tableHeader.getStringTableOffset(), SEEK_SET);
 
@@ -12,7 +12,6 @@ StringTable::StringTable(FILE *file, SymbolTableHeader tableHeader)
         FileUtils::readBytes(file, raw, tableSize);
 
         /*index the table*/
-        index = 0;
         dataIndex = 0;
         while(dataIndex < tableSize) {
                 table.push_back(&raw[dataIndex]);
@@ -37,7 +36,7 @@ char *StringTable::get(uint32_t index)
 {
         if(index < table.size())
                 return table[index];
-                
+
         return NULL;
 }
 

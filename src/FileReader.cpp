@@ -16,7 +16,6 @@ std::map<uint32_t, cs_arch> FileReader::capstoneArch = FileReader::makeCapstoneA
 FileReader::FileReader(MachO *binary)
 {
         Section *sec;
-        Segment *seg;
         uint64_t offset;
 
         this->binary = binary;
@@ -49,7 +48,6 @@ FileReader::FileReader(MachO *binary)
 
         /*insert in the functions offset the end of the __text section*/
         sec = binary->getSectionByIndex(1);
-        seg = binary->getSegmentByName(sec->getSegmentName());
         offset = sec->getOffset() + sec->getSize();
         functionsOffset.push_back(offset);
 

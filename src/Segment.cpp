@@ -30,7 +30,7 @@ std::vector<Section *> Segment::getSections()
 }
 Segment::~Segment()
 {
-        int index;
+        uint32_t index;
         for(index = 0; index < sections.size(); index++)
                 delete sections[index];
 }

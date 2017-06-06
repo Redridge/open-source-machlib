@@ -53,7 +53,7 @@ void print_segment(Segment *segment)
                 segment->getFlags(), segment->getNumberSections());
 
         std::vector<Section *> sections = segment->getSections();
-        for(int i = 0; i < segment->getNumberSections(); i++)
+        for(uint32_t i = 0; i < segment->getNumberSections(); i++)
                 print_section(sections[i]);
 }
 
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
         if(option == 2) {
                 std::vector<Segment *> segments = bin.getSegments();
 
-                for(int i = 0; i < segments.size(); i++) {
+                for(uint32_t i = 0; i < segments.size(); i++) {
                         print_segment(segments[i]);
                 }
         }
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 
         if(option == 4) {
                 StringTable *stringTable = bin.getStringTable();
-                for(int i = 0; i < stringTable->getNumberOfStrings(); i++) {
+                for(uint32_t i = 0; i < stringTable->getNumberOfStrings(); i++) {
                         printf("%d---%s\n", i,  stringTable->get(i) );
                 }
         }
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
         if(option == 5) {
                 std::vector<SymbolTableEntry *> symbolTable = bin.getSymbolTable();
 
-                for(int i = 0; i < symbolTable.size(); i++) {
+                for(uint32_t i = 0; i < symbolTable.size(); i++) {
                         print_symbol(symbolTable[i]);
                         printf("\n\n");
                 }
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
 
         if(option == 7) {
                 std::vector<char *> names = bin.listDynamicLibraries();
-                for(int i = 0; i < names.size(); i++)
+                for(uint32_t i = 0; i < names.size(); i++)
                         printf("%s\n", names[i]);
                 }
 
@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
         if(option == 12) {
                 std::vector<std::map<char *, char *, myKextComp> > map = bin.getKextsInfo();
                 std::map<char *, char *, myKextComp>::iterator it;
-                for (int i = 0; i < map.size(); i++) {
+                for (uint32_t i = 0; i < map.size(); i++) {
                         printf("kext %d\n", i);
                         for (it = map[i].begin(); it != map[i].end(); ++it) {
                                 printf("%s -- %s\n", it->first, it->second);
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
 
         if (option == 16) {
                 std::vector<DynamicSymbolTableEntry *> index = bin.getDynamicSymbolTable();
-                for (int  i = 0; i < index.size(); i++) {
+                for (uint32_t  i = 0; i < index.size(); i++) {
                         printf("%u---", index[i]->getIndex());
                         printf("%llx --- ", index[i]->getIndirectAdress() );
                         printf("%s\n", index[i]->getName());

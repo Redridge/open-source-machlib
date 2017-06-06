@@ -49,7 +49,6 @@ char *SymbolTableEntry::getName()
 
 SymbolTableEntry::~SymbolTableEntry()
 {
-        //printf("entry dessctructor");
         delete name;
 }
 

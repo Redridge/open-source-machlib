@@ -121,7 +121,8 @@ Segment *MachO::getSegmentByName(char * name)
         return NULL;
 }
 
-Section *MachO::getSectionByName(char *segmentName, char *sectionName) {
+Section *MachO::getSectionByName(char *segmentName, char *sectionName)
+{
 
         uint32_t index;
         Segment *seg;
@@ -169,7 +170,7 @@ StringTable *MachO::getStringTable()
 
 std::vector<SymbolTableEntry *> MachO::getSymbolTable()
 {
-        int index;
+        uint32_t index;
         StringTable *stringTable;
         char *strings;
 
@@ -219,7 +220,7 @@ std::vector<LibraryInfo *> MachO::getDynamicLibrariesInfo()
 
 std::vector<char *> MachO::listDynamicLibraries()
 {
-        int index;
+        uint32_t index;
         std::vector<char *> names(dynamicLibraries.size());
 
         for(index = 0; index < dynamicLibraries.size(); index++)
@@ -282,7 +283,6 @@ std::map<uint64_t, char *> MachO::getFunctionsOffset()
 
         return functionsOffset;
 
-
 }
 
 /*computes the symbol file offsets*/
@@ -310,12 +310,10 @@ uint64_t MachO::getSymbolFileOffset(SymbolTableEntry *symbol)
 
         uint64_t symbolFileoffset = 0, sectionOffset;
         Section *section;
-        Segment *segment;
 
         if (symbol->getSectionIndex() == 1  &&
                 symbol->isDefinedInSection()) {
                 section = getSectionByIndex(symbol->getSectionIndex());
-                segment = getSegmentByName(section->getSegmentName());
 
                 uint64_t sectionVirtualAddress = section->getVirtualAddress();
                 uint64_t sectionFileOffset = section->getOffset();
@@ -331,7 +329,6 @@ uint64_t MachO::getSymbolFileOffset(SymbolTableEntry *symbol)
 char *MachO::getFunctionName(uint64_t functionFileOffset)
 {
         if(symbolsFileOffset.find(functionFileOffset) == symbolsFileOffset.end()) {
-                //TODO dont forget to free this stuff
                 char * name = new char[20];
                 sprintf(name, "%s%llu", NAMEPREFIX, functionFileOffset);
                 return name;
@@ -586,7 +583,7 @@ std::vector<DynamicSymbolTableEntry *> MachO::getDynamicSymbolTable()
                                 symIndex = section->getReserved1();
                                 stubSize = section->getReserved2();
                                 noSymbols = section->getSize() / stubSize;
-                                for (int  i = symIndex; i < symIndex + noSymbols; i++, offset = offset + stubSize) {
+                                for (uint32_t  i = symIndex; i < symIndex + noSymbols; i++, offset = offset + stubSize) {
                                         char * name = symbolTable[indexes[i]]->getName();
                                         dynamicSymbolTable.push_back(new DynamicSymbolTableEntry(indexes[i], offset, name, section));
                                 }
@@ -599,7 +596,7 @@ std::vector<DynamicSymbolTableEntry *> MachO::getDynamicSymbolTable()
                                 symIndex = section->getReserved1();
                                 entrySize = header.getIs32() ? 4 : 8;
                                 noSymbols = section->getSize() / entrySize;
-                                for (int  i = symIndex; i < symIndex + noSymbols; i++, offset = offset + entrySize) {
+                                for (uint32_t  i = symIndex; i < symIndex + noSymbols; i++, offset = offset + entrySize) {
                                         char *name = NULL;
                                         if (indexes[i] == INDIRECT_SYMBOL_ABS )
                                                 name = (char *)"ABSOLUTE";
@@ -626,9 +623,10 @@ char *MachO::getFileName()
 {
         return fileName;
 }
+
 MachO::~MachO()
 {
-        int index;
+        uint32_t index;
 
         for(index = 0; index < segments.size(); index++){
                 delete segments[index];
