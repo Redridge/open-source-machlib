@@ -30,7 +30,10 @@ ifeq ($(OS), Darwin)
 	@export DYLD_LIBRARY_PATH=/usr/local/opt/capstone/lib/:$DYLD_LIBRARY_PATH
 else
 	@echo "installing dependencies for Linux"
-	@sudo apt-get install libcapstone3
+	@wget http://cz.archive.ubuntu.com/ubuntu/pool/universe/c/capstone/libcapstone3_3.0.4-0.2_amd64.deb
+	@sudo dpkg -i libcapstone3_3.0.4-0.2_amd64.deb
+	@wget http://cz.archive.ubuntu.com/ubuntu/pool/universe/c/capstone/libcapstone-dev_3.0.4-0.2_amd64.deb
+	@sudo dpkg -i libcapstone-dev_3.0.4-0.2_amd64.deb
 endif
 
 clean:
