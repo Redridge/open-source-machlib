@@ -19,7 +19,7 @@ The library and the sample application will be located inside the bin directory
 ```
 make
 ```
-Changing the LIBRARY PATH
+Changing the LIBRARY PATH.
 
 Linux 
 
