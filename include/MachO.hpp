@@ -23,6 +23,7 @@
 #include "SimpleLoadCommands.hpp"
 #include "LibraryInfo.hpp"
 #include "DynamicSymbolTable.hpp"
+#include "Blobs.hpp"
 
 
 #define LC_SEGMENT32            0x01
@@ -116,6 +117,7 @@ private:
 
 	/* information about where to find signature */
 	LinkEditCmd codeSignatureCmd;
+        bool codeSignatureCmdPresent;
 
 public:
         MachO(char  *fileName);
@@ -164,6 +166,7 @@ public:
         void dumpKext(char * bundleId, char *fileName);
         
 	LinkEditCmd getCodeSignatureCmd();
+	SuperBlob getSuperBlob();
 
         ~MachO();
 };
