@@ -63,6 +63,7 @@ MachO::MachO(char *fileName)
 
                         case LC_CODE_SIGNATURE:
                                 codeSignatureCmd = LinkEditCmd(file);
+                                codeSignatureCmdPresent = true;
                                 break;
 
                         /*parsing not yet implemented - -skip*/
@@ -244,6 +245,9 @@ LinkEditCmd MachO::getFunctionStartsCmd()
 
 LinkEditCmd MachO::getCodeSignatureCmd()
 {
+        if (!codeSignatureCmdPresent) {
+                throw std::runtime_error("LC_CODE_SIGNATURE not present");
+        }
         return codeSignatureCmd;
 }
 
@@ -680,4 +684,9 @@ MachO::~MachO()
         }
 
         fclose(file);
+}
+
+SuperBlob MachO::getSuperBlob()
+{
+	return SuperBlob(file, codeSignatureCmd);
 }
