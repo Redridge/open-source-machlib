@@ -13,6 +13,18 @@ void FileUtils::readUint32(FILE *file, uint32_t *buff)
                 *buff = swapUint32(*buff);
 }
 
+void FileUtils::readNetworkUint32(FILE *file, uint32_t *buff)
+{
+        uint32_t rc;
+	uint32_t buf;
+
+        rc = fread(&buf, sizeof(uint32_t), 1, file);
+        if (rc != 1)
+                throw std::runtime_error("File ReadNetwork32 Fail");
+	*buff = ntohl(buf);
+}
+
+
 void FileUtils::readUint64(FILE *file, uint64_t *buff)
 {
         uint32_t rc;
