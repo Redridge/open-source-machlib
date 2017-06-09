@@ -117,7 +117,7 @@ private:
 
 	/* information about where to find signature */
 	LinkEditCmd codeSignatureCmd;
-        bool codeSignatureCmdPresent;
+	bool codeSignatureCmdPresent;
 
 public:
         MachO(char  *fileName);

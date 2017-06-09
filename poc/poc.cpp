@@ -237,5 +237,24 @@ int main(int argc, char *argv[])
                 }
 
         }
+
+	if (option == 17) {
+		LinkEditCmd codeSignatureCmd = bin.getCodeSignatureCmd();
+		puts("LC_CODE_SIGNATURE");
+		printf("Offset: %d, Size: %d\n", codeSignatureCmd.getDataOffset(),
+			codeSignatureCmd.getDataSize());
+
+		puts("---------------------------");
+
+		SuperBlob sb = bin.getSuperBlob();
+		puts("SuperBlob");
+		printf("Length: %d, NumBlobs: %d\n", sb.getLength(), sb.getNumBlobs());
+
+		std::vector<struct subblob> sbs = sb.getSubBlobs();
+		for (unsigned int i = 0; i < sb.getNumBlobs(); i++) {
+			printf("\tType: %d, Offset: %d\n", sbs[i].type, sbs[i].offset);
+		}
+	}
+
         return 0;
 }
