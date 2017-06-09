@@ -688,5 +688,8 @@ MachO::~MachO()
 
 SuperBlob MachO::getSuperBlob()
 {
+        if (!codeSignatureCmdPresent) {
+                throw std::runtime_error("LC_CODE_SIGNATURE not present");
+        }
 	return SuperBlob(file, codeSignatureCmd);
 }

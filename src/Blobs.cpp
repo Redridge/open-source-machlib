@@ -10,9 +10,8 @@ SuperBlob::SuperBlob(FILE *file, LinkEditCmd sigCmd)
 	uint32_t buf;
 	uint32_t offset = sigCmd.getDataOffset();
 	uint32_t size = sigCmd.getDataSize();
-	lcSigCmd = sigCmd;	
 
-        fseek(file, offset, SEEK_SET);
+	fseek(file, offset, SEEK_SET);
 	FileUtils::readNetworkUint32(file, &buf);		
 	if (buf != CSMAGIC_EMBEDDED_SIGNATURE) {
                 throw std::runtime_error("Signature not valid.");

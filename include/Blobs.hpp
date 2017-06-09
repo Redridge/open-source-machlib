@@ -17,7 +17,6 @@ struct subblob {
 class SuperBlob
 {
 private:
-	LinkEditCmd lcSigCmd;
 	uint32_t length;
 	uint32_t numBlobs;
 	std::vector<struct subblob> subblobs;
