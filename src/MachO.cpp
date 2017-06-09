@@ -61,6 +61,10 @@ MachO::MachO(char *fileName)
                                 dynamicSymbolTableHeader = DynamicSymbolTableHeader(file);
                                 break;
 
+                        case LC_CODE_SIGNATURE:
+                                codeSignatureCmd = LinkEditCmd(file);
+                                break;
+
                         /*parsing not yet implemented - -skip*/
                         default:
                                 FileUtils::readUint32(file, &size);
@@ -236,6 +240,11 @@ LinkEditCmd MachO::getFunctionStartsCmd()
         }
 
         return functionStartsCmd;
+}
+
+LinkEditCmd MachO::getCodeSignatureCmd()
+{
+        return codeSignatureCmd;
 }
 
 std::map<uint64_t, char *> MachO::getFunctionsOffset()

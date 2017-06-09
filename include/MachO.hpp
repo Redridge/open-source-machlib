@@ -42,6 +42,7 @@
 
 #define LC_DYSYMTAB             0x0B
 
+#define LC_CODE_SIGNATURE	0x1D
 
 #define NAMEPREFIX              "func_"
 
@@ -113,6 +114,9 @@ private:
         void computeSymbolsFileOffset();
         char *getFunctionName(uint64_t functionFileOffset);
 
+	/* information about where to find signature */
+	LinkEditCmd codeSignatureCmd;
+
 public:
         MachO(char  *fileName);
 
@@ -158,6 +162,9 @@ public:
         uint64_t getVirtToFile(uint64_t virtualAddress);
 
         void dumpKext(char * bundleId, char *fileName);
+        
+	LinkEditCmd getCodeSignatureCmd();
+
         ~MachO();
 };
 
