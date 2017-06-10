@@ -335,6 +335,17 @@ char * FileReader::dumpSection(char *segmentName, char *sectionName, uint64_t *s
         return raw;
 }
 
+char * FileReader::dumpBytes(uint64_t offset, uint64_t size)
+{
+        char *raw;
+
+        raw = new char[size];
+        fseek(this->file, offset, SEEK_SET);
+        FileUtils::readBytes(this->file, raw, size);
+
+        return raw;
+}
+
 FileReader::~FileReader()
 {
         cs_close(&capstoneHandle);

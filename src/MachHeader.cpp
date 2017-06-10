@@ -5,14 +5,18 @@ MachHeader::MachHeader(FILE *file)
 {
         FileUtils::readUint32(file, &magic);
 
-        if(magic != MAGIC_32 && magic != MAGIC_64) {
+        if(magic != MAGIC_32 && magic != MAGIC_64 &&
+                magic != CIGAM_32 && magic != CIGAM_64) {
                 throw std::runtime_error("File probably not MachO");
         }
 
-        if(magic == MAGIC_32)
+        if(magic == MAGIC_32 || magic == CIGAM_32)
                 is_32 = true;
         else
                 is_32 = false;
+
+        if(magic == CIGAM_32 || magic == CIGAM_64)
+                FileUtils::setSwap();
 
         FileUtils::readUint32(file, &cpuType);
         FileUtils::readUint32(file, &cpuSubType);

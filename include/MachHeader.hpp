@@ -7,6 +7,8 @@
 
 #define MAGIC_32 0xFEEDFACE
 #define MAGIC_64 0xFEEDFACF
+#define CIGAM_32 0xCEFAEDFE
+#define CIGAM_64 0xCFFAEDFE  
 
 class MachHeader
 {
