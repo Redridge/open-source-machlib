@@ -67,6 +67,7 @@ public:
         void Disassemble(char *functionName);
         void Disassemble(uint64_t fileOffset);
         char * dumpSection(char * segmentName, char *sectionName, uint64_t *size);
+        char * dumpBytes(uint64_t offset, uint64_t size);
 
         ~FileReader();
 };
