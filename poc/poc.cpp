@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <vector>
+#include <iostream>
 #include "MachO.hpp"
 #include "FileReader.hpp"
 
@@ -254,6 +255,13 @@ int main(int argc, char *argv[])
 		for (unsigned int i = 0; i < sb.getNumBlobs(); i++) {
 			printf("\tType: %d, Offset: %d\n", sbs[i].type, sbs[i].offset);
 		}
+	}
+
+	if (option == 18) {
+		Entitlements ent = bin.getEntitlements();
+		puts("Entitlements");
+		puts("------------");
+		std::cout<<ent.getXml()<<"\n";
 	}
 
         return 0;

@@ -24,6 +24,7 @@
 #include "LibraryInfo.hpp"
 #include "DynamicSymbolTable.hpp"
 #include "Blobs.hpp"
+#include "Entitlements.hpp"
 
 
 #define LC_SEGMENT32            0x01
@@ -119,6 +120,14 @@ private:
 	LinkEditCmd codeSignatureCmd;
 	bool codeSignatureCmdPresent;
 
+	/* superblob */
+	SuperBlob superblob;
+	bool isSuperBlobFetched;
+
+	/* entitlements */
+	Entitlements entitlements;
+	bool isEntitlementsFetched;
+
 public:
         MachO(char  *fileName);
 
@@ -167,6 +176,8 @@ public:
         
 	LinkEditCmd getCodeSignatureCmd();
 	SuperBlob getSuperBlob();
+
+	Entitlements getEntitlements();
 
         ~MachO();
 };

@@ -14,6 +14,8 @@ MachO::MachO(char *fileName)
         symbolTableHeaderPresent = false;
         loadMainCmdPresent = false;
         functionStartsCmdPresent = false;
+	isSuperBlobFetched = false;
+	isEntitlementsFetched = false;
 
         /*parse load commands*/
         for (index = 0; index < header.getNumberCmds(); index++) {
@@ -691,5 +693,55 @@ SuperBlob MachO::getSuperBlob()
         if (!codeSignatureCmdPresent) {
                 throw std::runtime_error("LC_CODE_SIGNATURE not present");
         }
-	return SuperBlob(file, codeSignatureCmd);
+	
+	/* if we fetched the superblob already just return it */
+	if (isSuperBlobFetched)
+		return superblob;
+
+	superblob = SuperBlob(file, codeSignatureCmd);
+	isSuperBlobFetched = true;
+	return superblob;
 }
+
+Entitlements MachO::getEntitlements()
+{
+	char *buf;
+	std::string xml;
+	uint32_t magic;
+	uint32_t ent_offset;
+	uint32_t ent_size;
+
+	/* check if entitlements are fetched already */
+	if (isEntitlementsFetched)
+		return entitlements;
+
+	SuperBlob sb = getSuperBlob();
+	std::vector<struct subblob> sbs = sb.getSubBlobs();
+
+	/* find entitlements blob */
+	for (unsigned int i = 0; i < sbs.size(); i++) {
+		if (sbs[i].type == ENTITLEMENTS_VALUE) {
+			ent_offset = sbs[i].offset;
+			fseek(file, codeSignatureCmd.getDataOffset() + ent_offset, SEEK_SET);
+			FileUtils::readNetworkUint32(file, &magic);
+			FileUtils::readNetworkUint32(file, &ent_size);
+			/* account for the first 2 uints that we just read */
+			ent_size -= 8;
+
+			/* read xml */
+			buf = (char *) malloc(ent_size);
+			FileUtils::readBytes(file, buf, ent_size);
+			xml = std::string(buf, ent_size);
+			free(buf);
+
+			entitlements = Entitlements(xml);
+			isEntitlementsFetched = true;
+			return entitlements;
+		}
+	}
+
+	/* empty constructor
+	   should never get here */
+	return Entitlements();
+}
+
