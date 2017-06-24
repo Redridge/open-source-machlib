@@ -124,6 +124,10 @@ private:
 	SuperBlob superblob;
 	bool isSuperBlobFetched;
 
+	/* code directory blob */
+	CodeDirectoryBlob codeDirectoryBlob;
+	bool isCodeDirectoryBlobFetched;
+
 	/* entitlements */
 	Entitlements entitlements;
 	bool isEntitlementsFetched;
@@ -176,7 +180,7 @@ public:
         
 	LinkEditCmd getCodeSignatureCmd();
 	SuperBlob getSuperBlob();
-
+	CodeDirectoryBlob getCodeDirectoryBlob();
 	Entitlements getEntitlements();
 
         ~MachO();

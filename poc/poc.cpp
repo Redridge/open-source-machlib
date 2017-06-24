@@ -264,5 +264,38 @@ int main(int argc, char *argv[])
 		std::cout<<ent.getXml()<<"\n";
 	}
 
+	if (option == 19) {
+		CodeDirectoryBlob cdb = bin.getCodeDirectoryBlob();
+		puts("Code Directory Blob");
+		puts("------------");
+		printf("length: %d\n", cdb.getLength());
+		printf("version: %#08X\n", cdb.getVersion());
+		printf("flags: %#08X\n", cdb.getFlags());
+		printf("hashOffset: %d\n", cdb.getHashOffset());
+		printf("identOffset: %d\n", cdb.getIdentOffset());
+		printf("nSpecialSlots: %d\n", cdb.getNSpecialSlots());
+		printf("nCodeSlots: %d\n", cdb.getNCodeSlots());
+		printf("codeLimit: %d\n", cdb.getCodeLimit());
+		printf("hashType: %d\n", cdb.getHashType());
+		printf("hashSize: %d\n", cdb.getHashSize());
+		printf("pageSize: %d\n", cdb.getPageSize());
+
+		uint32_t nSpecialSlots = cdb.getNSpecialSlots();
+		uint32_t nCodeSlots = cdb.getNCodeSlots();
+		uint32_t hashSize = cdb.getHashSize();
+		std::vector<char*> hashes = cdb.getHashes();
+		for (uint32_t i = 0; i < nSpecialSlots; i++) {
+			printf("%d: ", -nSpecialSlots + i);
+			for (uint32_t j = 0; j < hashSize; j++)
+				printf("%02hhx", hashes[i][j]);
+			puts("");
+		}
+		for (uint32_t i = nSpecialSlots; i < nSpecialSlots + nCodeSlots; i++) {
+			printf("%d: ", i - nSpecialSlots);
+			for (uint32_t j = 0; j < hashSize; j++)
+				printf("%02hhx", hashes[i][j]);
+			puts("");
+		}
+	}
         return 0;
 }

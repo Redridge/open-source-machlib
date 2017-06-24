@@ -15,6 +15,7 @@ MachO::MachO(char *fileName)
         loadMainCmdPresent = false;
         functionStartsCmdPresent = false;
 	isSuperBlobFetched = false;
+	isCodeDirectoryBlobFetched = false;
 	isEntitlementsFetched = false;
 
         /*parse load commands*/
@@ -745,3 +746,14 @@ Entitlements MachO::getEntitlements()
 	return Entitlements();
 }
 
+CodeDirectoryBlob MachO::getCodeDirectoryBlob()
+{
+	if (isCodeDirectoryBlobFetched)
+		return codeDirectoryBlob;
+	if (!isSuperBlobFetched)
+		getSuperBlob();
+	codeDirectoryBlob = CodeDirectoryBlob(file, codeSignatureCmd,
+					      superblob);
+	isCodeDirectoryBlobFetched = true;
+	return codeDirectoryBlob;
+}
