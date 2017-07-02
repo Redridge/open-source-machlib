@@ -96,22 +96,22 @@ void print_lib(LibraryInfo * lib)
 int main(int argc, char *argv[])
 {
 
-        int option;
+       // int option;
 
         if (argc != 3) {
                 printf("Usage: %s <binary> <option>\n", argv[0]);
                 return -1;
         }
-        sscanf(argv[2], "%d", &option);
+        //sscanf(argv[2], "%d", &option);
 
 
         MachO bin(argv[1]);
-        if(option == 1) {
+        if(strstr(argv[2], "head")) {
                 MachHeader header = bin.getHeader();
                 print_header(header);
         }
 
-        if(option == 2) {
+        if(strstr(argv[2], "seglc")) {
                 std::vector<Segment *> segments = bin.getSegments();
 
                 for(uint32_t i = 0; i < segments.size(); i++) {
@@ -119,19 +119,19 @@ int main(int argc, char *argv[])
                 }
         }
 
-        if(option == 3) {
+        if(strstr(argv[2], "symlc")) {
                 SymbolTableHeader symbolTableHeader = bin.getSymbolTableHeader();
                 print_symbol_header(symbolTableHeader);
         }
 
-        if(option == 4) {
+        if(strstr(argv[2], "strtab")) {
                 StringTable *stringTable = bin.getStringTable();
                 for(uint32_t i = 0; i < stringTable->getNumberOfStrings(); i++) {
                         printf("%d---%s\n", i,  stringTable->get(i) );
                 }
         }
 
-        if(option == 5) {
+        if(strstr(argv[2], "symtab")) {
                 std::vector<SymbolTableEntry *> symbolTable = bin.getSymbolTable();
 
                 for(uint32_t i = 0; i < symbolTable.size(); i++) {
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
                 }
         }
 
-        if(option == 6) {
+        if(strstr(argv[2], "misc")) {
                 LoadDyLinkerCmd *cmd = bin.getLoadDyLinkerCmd();
                 if(cmd != NULL)
                         printf(" the linker name is %s\n", cmd->getLinkerName() );
@@ -160,16 +160,16 @@ int main(int argc, char *argv[])
                 mainCmd.getStackSize());
         }
 
-        if(option == 7) {
+        if(strstr(argv[2], "liblc")) {
                 std::vector<char *> names = bin.listDynamicLibraries();
                 for(uint32_t i = 0; i < names.size(); i++)
                         printf("%s\n", names[i]);
                 }
 
-        if(option == 8) {
+        if(strstr(argv[2], "fc_starts")) {
                 LinkEditCmd fcstart = bin.getFunctionStartsCmd();
 
-                printf("LinkEditCmd ------------\n");
+                printf("Function starts Cmd ------------\n");
                 printf("dataOffset: %u\ndataSize: %u\n", fcstart.getDataOffset(),
                 fcstart.getDataSize());
 
@@ -180,22 +180,22 @@ int main(int argc, char *argv[])
                         printf("0x%llx ----- %s\n", it->first, it->second);
         }
 
-        if(option == 9) {
+        if(strstr(argv[2], "dis_all")) {
                 FileReader fileReader(&bin);
                 fileReader.Disassemble();
         }
 
-        if(option == 10) {
+        if(strstr(argv[2], "dis_main")) {
                 FileReader fileReader(&bin);
                 fileReader.Disassemble((char *)"_main");
         }
 
-        if(option == 11) {
+        if(strstr(argv[2], "dis_offset")) {
                 FileReader fileReader(&bin);
                 fileReader.Disassemble(7030);
         }
 
-        if(option == 12) {
+        if(strstr(argv[2], "kexts")) {
                 std::vector<std::map<char *, char *, myKextComp> > map = bin.getKextsInfo();
                 std::map<char *, char *, myKextComp>::iterator it;
                 for (uint32_t i = 0; i < map.size(); i++) {
@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
                 printf("got %lu kernel extensions\n", map.size() );
         }
 
-        if(option == 13) {
+        if(strstr(argv[2], "find_kext")) {
                 std::map<char *, char *, myKextComp> map2;
                 map2 = bin.getKextByBundleId((char *)"com.apple.kpi.mach");
                 std::map<char *, char *, myKextComp>::iterator it;
@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
                 }
         }
 
-        if(option == 14) {
+        if(strstr(argv[2], "dump_section")) {
                 FileReader fileReader(&bin);
                 uint64_t size;
                 char * raw = fileReader.dumpSection((char *)"__TEXT", (char *)"__cstring", &size);
@@ -225,11 +225,11 @@ int main(int argc, char *argv[])
                 delete raw;
         }
 
-        if (option == 15) {
+        if (strstr(argv[2], "dump_kext")) {
                 bin.dumpKext((char *)"com.apple.iokit.IOTimeSyncFamily", (char *) "kpi");
         }
 
-        if (option == 16) {
+        if (strstr(argv[2], "indsymtab")) {
                 std::vector<DynamicSymbolTableEntry *> index = bin.getDynamicSymbolTable();
                 for (uint32_t  i = 0; i < index.size(); i++) {
                         printf("%u---", index[i]->getIndex());
@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
 
         }
 
-	if (option == 17) {
+	if (strstr(argv[2], "siglc")) {
 		LinkEditCmd codeSignatureCmd = bin.getCodeSignatureCmd();
 		puts("LC_CODE_SIGNATURE");
 		printf("Offset: %d, Size: %d\n", codeSignatureCmd.getDataOffset(),
@@ -257,14 +257,14 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (option == 18) {
+	if (strstr(argv[2], "ent")) {
 		Entitlements ent = bin.getEntitlements();
 		puts("Entitlements");
 		puts("------------");
 		std::cout<<ent.getXml()<<"\n";
 	}
 
-	if (option == 19) {
+	if (strstr(argv[2], "cdb")) {
 		CodeDirectoryBlob cdb = bin.getCodeDirectoryBlob();
 		puts("Code Directory Blob");
 		puts("------------");
